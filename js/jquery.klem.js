@@ -23,7 +23,7 @@
                 })
         });
 
-        $('div.body').on('done-h1-klem-1', function() {
+        $('div.body').one('done-h1-klem-1', function() {
             $('h1.header').replaceWith($('<h1 class="header typeface-js middle"></h1>'));
             $('h1.header').html('no')
                 .textillate({
@@ -36,7 +36,7 @@
                 })
         });
 
-        $('div.body').on('done-h1-klem-2', function() {
+        $('div.body').one('done-h1-klem-2', function() {
             $('h1.header').replaceWith($('<h1 class="header typeface-js middle"></h1>'));
             $('h1.header').html('nein')
                 .textillate({
@@ -49,7 +49,7 @@
                 });
         });
 
-        $('div.body').on('done-h1-klem-3', function() {
+        $('div.body').one('done-h1-klem-3', function() {
             $('h1.header').replaceWith($('<h1 class="header typeface-js middle"></h1>'));
             $('h1.header').html('jansi lives in Emmen')
                 .textillate({
@@ -72,7 +72,7 @@
                 });
         });
 
-        $('div.body').on('body-done-klem-4', function() {
+        $('div.body').one('body-done-klem-4', function() {
             $('div.content').hide();
             $('div.earth').fadeIn();
             $.when(self.earth.showKlem('em')).then(function() {
@@ -115,8 +115,8 @@
             });
         });
 
-        $('div.body').on('body-done-klem-4', function() {
-            $('div.img, div.content, div.earth').fadeOut(function() {
+        $('div.body').one('body-done-klem-5', function() {
+            $('h1.header, div.img, div.content, div.earth').fadeOut(function() {
                 console.log('ready');
             });
         });

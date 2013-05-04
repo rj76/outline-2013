@@ -30,9 +30,6 @@
         earth = new WebGLEarth('earth_div', options);
         $('div.earth').data('earth', earth);
 
-        // remove previous tweens if needed
-        var tween;
-
         function getLocation(callback) {
             var lat = parseFloat(current.lat);
             var lng = parseFloat(current.lon);
@@ -49,7 +46,7 @@
         function setUpTween() {
             TWEEN.removeAll();
             var latlon = could_have_lat_lon.pop();
-            tween = new TWEEN.Tween(current)
+            var tween = new TWEEN.Tween(current)
                 .to({lat: latlon[0], lon: latlon[1]}, duration)
                 .delay(delay)
                 .easing(TWEEN.Easing.Elastic.InOut)
@@ -57,9 +54,10 @@
                 .onComplete(function() {
                     getLocation(function(result) {
                         $('div.content').fadeOut();
-                        var txt = could_have_text.shift();
                         $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
-                        $('h1.header').html(txt);
+                        $('h1.header').show();
+                        $('h1.header').html(could_have_text[could_have_text.length - could_have_lat_lon.length-1]);
+                        console.log($('h1.header'));
                         var zoom_in_tween = new TWEEN.Tween(current)
                             .to({zoom: zoom_in}, duration)
                             .onUpdate(function() {earth.setZoom(current.zoom)})
@@ -82,18 +80,21 @@
                                                                     deferred.resolve();
                                                                 } else {
                                                                     var latlon = could_have_lat_lon.pop();
-                                                                    var zoom_out_tween = new TWEEN.Tween(current)
-                                                                        .to({zoom: zoom_out})
-                                                                        .onUpdate(function() {earth.setZoom(current.zoom)})
-                                                                        .onComplete(function() {
-                                                                            tween.start();
-                                                                            tween.to({lat: latlon[0], lon: latlon[1]}, duration);
-                                                                        });
-                                                                    zoom_out_tween.start();
+                                                                    $('h1.header, div.content').fadeOut('slow', function() {
+                                                                        var zoom_out_tween = new TWEEN.Tween(current)
+                                                                            .to({zoom: zoom_out})
+                                                                            .onUpdate(function() {earth.setZoom(current.zoom)})
+                                                                            .onComplete(function() {
+                                                                                console.log('starting location tween, could_have_lat_lon.length='+could_have_lat_lon.length);
+                                                                                tween.start();
+                                                                                tween.to({lat: latlon[0], lon: latlon[1]}, duration);
+                                                                            });
+                                                                        zoom_out_tween.start();
+                                                                    });
                                                                 }
                                                             }
                                                         }
-                                                    })
+                                                    });
                                             }
                                         }
                                     });
@@ -101,10 +102,10 @@
                         zoom_in_tween.start();
                     });
                 });
+                tween.start();
         }
 
         setUpTween();
-        tween.start();
 
         tween_interval = setInterval(function() {
             TWEEN.update();
