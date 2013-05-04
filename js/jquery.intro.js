@@ -15,13 +15,16 @@
                 })
         });
         $('h1.header').on('done-h1-1', function () {
+            $('div.content').replaceWith($('<div class="content"></div>'));
             $('div.content').html('Our very first demo')
             $('div.content')
                 .textillate({
                     in: {
                         effect: 'fadeInLeftBig',
                         done: function() {
-                            $('div.body').trigger('body-done-1');
+                            $('div.content').fadeOut('slow', function() {
+                                $('div.body').trigger('body-done-1');
+                            });
                         }
                     }
                 })
@@ -36,7 +39,9 @@
                     in: {
                         effect: 'fadeInRightBig',
                         done: function() {
-                            $('div.body').trigger('body-done-2');
+                            $('div.content').fadeOut('slow', function() {
+                                $('div.body').trigger('body-done-2');
+                            });
                         }
                     }
                 })

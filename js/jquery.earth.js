@@ -1,8 +1,16 @@
 (function ($) {
+    var zoom_out = 2, zoom_in = 5, zoom=zoom_out, zoom_in_klem=6;
+    var current	= {lat: 0, lon: 0, zoom: zoom_out};
+    var earth, tween_interval;
+    var delay = 100, duration = 3000;
+
+    var update  = function(){
+        earth.setPosition(current.lat, current.lon);
+    };
+
     $.earth = function () {};
     $.earth.prototype.start = function() {
         var deferred = new $.Deferred();
-        var earth;
         var geocoder = new google.maps.Geocoder();
         var could_have_lat_lon = [
             [37.7756, -122.4193],
@@ -18,14 +26,11 @@
             'even in'
         ];
 
-        var zoom_out = 2, zoom_in = 5, zoom=zoom_out;
-        var current	= {lat: 0, lon: 0, zoom: zoom_out};
         var options = { zoom: current.zoom, position: [current.lat, current.lon], proxyHost: 'http://data.webglearth.com/cgi-bin/corsproxy.fcgi?url=' };
         earth = new WebGLEarth('earth_div', options);
+        $('div.earth').data('earth', earth);
 
         // remove previous tweens if needed
-        var delay = 100;
-        var duration = 3000;
         var tween;
 
         function getLocation(callback) {
@@ -40,10 +45,6 @@
                 }
             });
         }
-
-        var update  = function(){
-            earth.setPosition(current.lat, current.lon);
-        };
 
         function setUpTween() {
             TWEEN.removeAll();
@@ -77,6 +78,7 @@
                                                             done: function() {
                                                                 if (could_have_lat_lon.length == 0) {
                                                                     TWEEN.removeAll();
+                                                                    window.clearInterval(tween_interval);
                                                                     deferred.resolve();
                                                                 } else {
                                                                     var latlon = could_have_lat_lon.pop();
@@ -104,10 +106,46 @@
         setUpTween();
         tween.start();
 
-        setInterval(function() {
+        tween_interval = setInterval(function() {
             TWEEN.update();
         }, 30);
 
         return deferred;
     };
+
+    $.earth.prototype.showKlem = function(klem) {
+        var deferred = new $.Deferred();
+
+        var kl_latlon = [52.7251, 6.985400000000027];
+        var em_latlon = [52.7858037, 6.897585100000015];
+
+        var zoom_out_tween = new TWEEN.Tween(current)
+            .to({zoom: zoom_out})
+            .onUpdate(function() {earth.setZoom(current.zoom)})
+            .onComplete(function() {
+                var latlon = klem == 'em' ? em_latlon : kl_latlon;
+                var tween = new TWEEN.Tween(current)
+                    .to({lat: latlon[0], lon: latlon[1]}, duration)
+                    .delay(delay)
+                    .easing(TWEEN.Easing.Elastic.InOut)
+                    .onUpdate(update)
+                    .onComplete(function() {
+                        var zoom_in_tween = new TWEEN.Tween(current)
+                            .to({zoom: zoom_in_klem}, duration)
+                            .onUpdate(function() {earth.setZoom(current.zoom)})
+                            .onComplete(function() {
+                                deferred.resolve();
+                            });
+                        zoom_in_tween.start();
+                    });
+                tween.start();
+            });
+        zoom_out_tween.start();
+
+        tween_interval = setInterval(function() {
+            TWEEN.update();
+        }, 30);
+
+        return deferred;
+    }
 }(jQuery));

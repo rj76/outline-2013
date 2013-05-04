@@ -4,7 +4,7 @@
         return arr;
     };
 
-    var $intro = new $.intro(), $earth = new $.earth(), $klem = new $.klem();
+    var $intro = new $.intro(), $earth = new $.earth(), $klem = new $.klem($earth);
 
     $.when($intro.start()).then(function() {
         $.when($earth.start()).then(function() {
