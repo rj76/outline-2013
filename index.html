@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Kl3m</title>
+    <meta charset="utf-8">
+    <script src="js/modernizr.custom.50055.js"></script>
+    <!--<script type="text/javascript"-->
+            <!--src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg859VUwd1F8pQ6eYDKjoymlW2P7phQeg&sensor=false">-->
+    <!--</script>-->
+</head>
+<body>
+<script>
+    Modernizr.load([
+        'css/style.css',
+        'css/animate-custom.css',
+        {
+            load:'http://www.google.com/jsapi',
+            callback: function() {
+            google.load("maps", "3",
+                    {
+                        callback: function () {
+                            console.log("loaded");
+                        },
+                        other_params: "sensor=false"
+                    });
+        }},
+        'js/jquery-1.9.1.min.js',
+        'js/jquery.gradienttext-0.1.min.js',
+        'js/tween.min.js',
+        'js/jquery.textillate.js',
+        'js/jquery.lettering-0.6.1.min.js',
+        'js/typeface-0.15.js',
+        'js/atari_font_full_version_regular.typeface.js',
+        'http://www.webglearth.com/api.js',
+        'js/intro-1.js',
+        'js/earth.js',
+        'js/demo.js'
+    ]);
+
+//    function hoi() {
+//        Modernizr.load({
+//            load: 'js/earth.js',
+//            complete: function () {
+//                console.log('loaded');
+//                var earth = new $.earth();
+//                earth.start();
+//            }
+//        });
+//    }
+//
+//    google.maps.event.addDomListener(window, 'load', hoi);
+
+</script>
+<div class="body">
+    <h1 class="header typeface-js"></h1>
+    <div class="content"></div>
+    <div class="earth" id="earth_div"></div>
+</div>
+</body>
+</html>
