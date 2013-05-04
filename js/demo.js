@@ -4,7 +4,12 @@
         return arr;
     };
 
-    $('h1.header').trigger('show-h1-1');
-    var earth = new $.earth();
-    earth.start();
+    var $intro = new $.intro(), $earth = new $.earth(), $klem = new $.klem();
+
+    $.when($intro.start()).then(function() {
+        $.when($earth.start()).then(function() {
+            $klem.start();
+        });
+    });
+
 }(jQuery));

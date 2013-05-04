@@ -16,14 +16,14 @@
         {
             load:'http://www.google.com/jsapi',
             callback: function() {
-            google.load("maps", "3",
-                    {
-                        callback: function () {
-                            console.log("loaded");
-                        },
-                        other_params: "sensor=false"
-                    });
-        }},
+                google.load("maps", "3",
+                        {
+                            callback: function () {
+                            },
+                            other_params: "sensor=false"
+                        });
+            }
+        },
         'js/jquery-1.9.1.min.js',
         'js/jquery.gradienttext-0.1.min.js',
         'js/tween.min.js',
@@ -32,28 +32,15 @@
         'js/typeface-0.15.js',
         'js/atari_font_full_version_regular.typeface.js',
         'http://www.webglearth.com/api.js',
-        'js/intro-1.js',
-        'js/earth.js',
+        'js/jquery.intro.js',
+        'js/jquery.earth.js',
+        'js/jquery.klem.js',
         'js/demo.js'
     ]);
-
-//    function hoi() {
-//        Modernizr.load({
-//            load: 'js/earth.js',
-//            complete: function () {
-//                console.log('loaded');
-//                var earth = new $.earth();
-//                earth.start();
-//            }
-//        });
-//    }
-//
-//    google.maps.event.addDomListener(window, 'load', hoi);
-
 </script>
 <div class="body">
     <h1 class="header typeface-js"></h1>
-    <div class="content"></div>
+    <div class="content typeface-js"></div>
     <div class="earth" id="earth_div"></div>
 </div>
 </body>
