@@ -5,15 +5,17 @@
     };
 
     $.preintro.prototype.tweenViewport = function() {
-        $('div.body').fadeIn(6000, function() {
-            var p = $('div.body').position();
-            $('#fft').css('left', p.left).css('top', ($('div.body').outerHeight())-$('#fft').height()+8);
-            $('#fft').fadeIn();
-        });
-    };
+        var deferred = new $.Deferred();
 
-    $.preintro.prototype.sayHello = function() {
-        console.log('saying hello');
+        $('div.body').fadeIn(10000, function() {
+            var p = $('div.body').position();
+            $('#fft').css('left', p.left).css('top', ($('div.body').outerHeight())-$('#fft').height()+20);
+            $('#fft').fadeIn();
+            $('h1.header,div.content,div.img,div.earth,div.body,#fft').show();
+            deferred.resolve();
+        });
+
+        return deferred;
     };
 
 

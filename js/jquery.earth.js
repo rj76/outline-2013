@@ -1,8 +1,8 @@
 (function ($) {
-    var zoom_out = 2, zoom_in = 5, zoom=zoom_out, zoom_in_klem=6;
+    var zoom_out = 2, zoom_in = 5, zoom=zoom_out, zoom_in_em=7,zoom_in_kl=10;
     var current	= {lat: 0, lon: 0, zoom: zoom_out};
     var earth, tween_interval;
-    var delay = 100, duration = 3000;
+    var delay = 100, duration = 2500;
 
     var update  = function(){
         earth.setPosition(current.lat, current.lon);
@@ -33,6 +33,12 @@
         var options = { zoom: current.zoom, position: [current.lat, current.lon], proxyHost: 'http://data.webglearth.com/cgi-bin/corsproxy.fcgi?url=' };
         earth = new WebGLEarth('earth_div', options);
         $('div.earth').data('earth', earth);
+
+        setUpTween();
+
+        tween_interval = setInterval(function() {
+            TWEEN.update();
+        }, 30);
 
         function getLocation(callback) {
             var lat = parseFloat(current.lat);
@@ -107,12 +113,6 @@
                 tween.start();
         }
 
-        setUpTween();
-
-        tween_interval = setInterval(function() {
-            TWEEN.update();
-        }, 30);
-
         return deferred;
     };
 
@@ -127,6 +127,7 @@
             .onUpdate(function() {earth.setZoom(current.zoom)})
             .onComplete(function() {
                 var latlon = klem == 'em' ? em_latlon : kl_latlon;
+                var zm = klem == 'em' ? zoom_in_em : zoom_in_kl;
                 var tween = new TWEEN.Tween(current)
                     .to({lat: latlon[0], lon: latlon[1]}, duration)
                     .delay(delay)
@@ -134,7 +135,7 @@
                     .onUpdate(update)
                     .onComplete(function() {
                         var zoom_in_tween = new TWEEN.Tween(current)
-                            .to({zoom: zoom_in_klem}, duration)
+                            .to({zoom: zm}, duration)
                             .onUpdate(function() {earth.setZoom(current.zoom)})
                             .onComplete(function() {
                                 deferred.resolve();

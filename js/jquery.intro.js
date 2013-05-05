@@ -24,42 +24,59 @@
             $('div.content')
                 .textillate({
                     in: {
-                        effect: 'fadeInLeftBig',
+                        effect: 'fadeIn',
+                        duration: 3000,
                         done: function() {
-                            $('div.content').fadeOut('slow', function() {
-                                $('div.body').trigger('body-done-1');
-                            });
-                        }
-                    }
-                })
-
-        });
-
-        $('div.body').one('body-done-1', function() {
-            $('div.content').replaceWith($('<div class="content"></div>'));
-            $('div.content').html('Yet another group')
-            $('div.content')
-                .textillate({
-                    in: {
-                        effect: 'fadeInRightBig',
-                        done: function() {
-                            $('div.content').fadeOut('slow', function() {
+                            $('div.content').fadeOut(1000, function() {
                                 $('div.body').trigger('body-done-2');
                             });
                         }
                     }
                 })
+
         });
 
         $('div.body').one('body-done-2', function() {
             $('div.content').replaceWith($('<div class="content"></div>'));
-            $('div.content').html('The name we\'ve chosen is as shitty as the places we come from')
+            $('div.content').html('A bit of CSS3, a bit of HTML5, and a bit of webGL')
             $('div.content')
                 .textillate({
                     in: {
                         effect: 'fadeIn',
                         done: function() {
                             $('div.content').fadeOut(function() {
+                                $('div.body').trigger('body-done-3');
+                            });
+                        }
+                    }
+                })
+        });
+
+        $('div.body').one('body-done-3', function() {
+            $('div.content').replaceWith($('<div class="content"></div>'));
+            $('div.content').html('and a lot of beer :P')
+            $('div.content')
+                .textillate({
+                    in: {
+                        effect: 'fadeIn',
+                        done: function() {
+                            $('div.content').fadeOut(function() {
+                                $('div.body').trigger('body-done-4');
+                            });
+                        }
+                    }
+                })
+        });
+
+        $('div.body').one('body-done-4', function() {
+            $('div.content').replaceWith($('<div class="content"></div>'));
+            $('div.content').html('Hope you enjoy')
+            $('div.content')
+                .textillate({
+                    in: {
+                        effect: 'fadeIn',
+                        done: function() {
+                            $('div.content,h1.header').fadeOut(function() {
                                 deferred.resolve();
                             });
                         }

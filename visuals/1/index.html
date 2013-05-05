@@ -1,0 +1,887 @@
+<!-- http://www.clicktorelease.com/code/rocking-dendrites/ -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<title>Rocking dendrites</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <link href="js/css.css" rel="stylesheet" type="text/css">
+    <script src="../../js/modernizr.custom.50055.js"></script>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				color: white;
+			}
+			select, option{ 
+				color: black;
+				font-family: 'Lucida Grande', sans-serif;
+				font-size: 11px;
+			}
+			body {
+				background:#fff;
+				padding:0;
+				margin:0;
+				font-weight: bold;
+				overflow:hidden;
+				border: 1px solid transparent;
+			}
+			#container{
+				position: absolute;
+				left: 0; top: 0; right: 0; bottom: 0;
+				background: #7d7e7d; /* Old browsers */
+                background: -moz-radial-gradient(center, ellipse cover,  #7d7e7d 0%, #0e0e0e 100%); /* FF3.6+ */
+                background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#7d7e7d), color-stop(100%,#0e0e0e)); /* Chrome,Safari4+ */
+                background: -webkit-radial-gradient(center, ellipse cover,  #7d7e7d 0%,#0e0e0e 100%); /* Chrome10+,Safari5.1+ */
+                background: -o-radial-gradient(center, ellipse cover,  #7d7e7d 0%,#0e0e0e 100%); /* Opera 12+ */
+                background: -ms-radial-gradient(center, ellipse cover,  #7d7e7d 0%,#0e0e0e 100%); /* IE10+ */
+                background: radial-gradient(ellipse at center,  #7d7e7d 0%,#0e0e0e 100%); /* W3C */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7e7d', endColorstr='#0e0e0e',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+			}
+			#error{ display: none; position: absolute; left: 50%; margin-left: -300px; width: 600px; top: 30px; background-color: rgba( 167, 0, 0, .8 ); padding: 20px; border-radius: 5px; color: white; text-shadow: 0 -1px 0 rgba( 0,0,0,.8 ); text-align: center; font-family: arial, sans-serif; font-weight: normal; font-size: 14px }
+			#error p{ margin-bottom: 1em }
+		</style>
+    </head>
+
+	<body>
+        <audio controls="none" style="display: none">
+            <source src="../../track/track-2.ogg" type="audio/ogg" />
+            <source src="../../track/track.mp3" type="audio/mpeg" />
+            Your browser does not support the audio element.
+        </audio>
+		<div id="container">
+        </div>
+		<div id="error">
+			<div id="no-webgl">
+				<p>Your browser doesn't seem to support WebGL.</p>
+				<p>Please load this site with a browser with WebGL support,<br>like Mozilla Firefox, Google Chrome, Safari (MacOS)<br>Opera Next does run, too, but a bit buggy.</p>
+			</div>
+		</div>
+		<script src="js/Detector.js"></script>
+		<script src="js/dat.js"></script>
+		<script src="js/three.js"></script>
+		<script src="js/tween.js"></script>
+		<script src="js/DSP.js"></script>
+		<script id="vs-particles" type="x-shader/x-vertex">
+
+			varying vec2 vUV;
+			varying float vDepth;
+			varying float vFocus;
+			varying float vAlpha;
+			
+			uniform float scale;
+			uniform float z;
+			uniform float rotation;
+			uniform vec2 resolution;
+			
+			void main() {
+
+				vec4 mvPosition = modelViewMatrix * vec4( 0., 0., z, 1. );
+				vDepth = ( - mvPosition.z - 1. ) / ( 1000. - 1. );
+				float f = 0.0;
+				vAlpha = 1.0;
+				vFocus = 0.0;
+				if( vDepth < .75 ) {
+					// front
+					f = 1. - clamp( vDepth * ( 1. / .75 ), 0., 1. );
+					vFocus = f;
+					vAlpha = .6 + .3 * ( 1. - vFocus );
+				} else if( vDepth > .95 ) {
+					// back
+					f = clamp( ( vDepth - .95 ) * ( 1. / .95 ), 0., 1. );
+					vFocus = f;
+					vAlpha = .1 + .9 * ( 1. - vFocus );
+				}
+				
+				vec2 tScale = ( scale + .5 * f ) * vec2( 1., resolution.x / resolution.y ) ;
+				vec2 uvOffset = vec2( 0. );
+				vec2 uvScale = vec2( 1. );
+			
+				vUV = uvOffset + uv * uvScale;
+
+				vec2 alignedPosition = position.xy;
+
+				vec2 rotatedPosition;
+				rotatedPosition.x = ( cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y ) * tScale.x;
+				rotatedPosition.y = ( sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y ) * tScale.y;
+
+				vec4 finalPosition;
+
+				finalPosition = projectionMatrix * modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
+				finalPosition.xy += rotatedPosition;
+
+				gl_Position = finalPosition;
+
+			}
+
+		</script>
+
+		<script id="fs-particles" type="x-shader/x-fragment">
+
+			uniform sampler2D normal;
+			uniform sampler2D blur;
+			uniform vec3 colour;
+			uniform float opacity;
+			
+			varying vec2 vUV;
+			varying float vDepth;
+			varying float vFocus;
+			varying float vAlpha;
+				
+			void main() {
+
+				vec4 bC = texture2D( blur, vUV );
+				vec4 nC = texture2D( normal, vUV );
+				vec4 fColour;
+				fColour = mix( nC, bC, vFocus );
+				fColour.rgb *= colour;
+				fColour.rgb *= .75 + .45 * vec3( 1. - vDepth );
+				fColour.a *= vAlpha * opacity;
+				gl_FragColor = vec4( fColour.rgb, fColour.a );
+				
+			}
+
+
+		</script>
+
+        <script id="fragmentShader" type="x-shader/x-fragment">
+
+
+            uniform float time;
+            uniform vec2 resolution;
+
+            uniform sampler2D texture1;
+            uniform sampler2D texture2;
+
+            varying vec2 vUv;
+
+            // __FOG_PARS_FRAGMENT__
+
+            // __SHADOWMAP_PARS_FRAGMENT__
+
+            void main( void ) {
+
+            vec2 position = -1.0 + 2.0 * vUv;
+
+            vec4 noise = texture2D( texture1, vUv );
+            vec2 T1 = vUv + vec2( 1.5, -1.5 ) * -time  *0.02;
+            vec2 T2 = vUv + vec2( -0.5, 2.0 ) * -time * 0.01;
+
+            T1.x += noise.x * 2.0;
+            T1.y += noise.y * 2.0;
+            T2.x -= noise.y * 0.2;
+            T2.y += noise.z * 0.2;
+
+            float p = texture2D( texture1, T1 * 2.0 ).a;
+
+            vec4 color = texture2D( texture2, T2 * 2.0 );
+            vec4 temp = color * ( vec4( p, p, p, p ) * 2.0 ) + ( color * color - 0.1 );
+
+            if( temp.r > 1.0 ){ temp.bg += clamp( temp.r - 2.0, 0.0, 100.0 ); }
+            if( temp.g > 1.0 ){ temp.rb += temp.g - 1.0; }
+            if( temp.b > 1.0 ){ temp.rg += temp.b - 1.0; }
+
+
+            gl_FragColor = 1.0 * temp;
+
+            // __SHADOWMAP_FRAGMENT__
+
+            // __FOG_FRAGMENT__
+
+            }
+
+        </script>
+
+        <script id="vertexShader" type="x-shader/x-vertex">
+
+            // __SHADOWMAP_PARS_VERTEX__
+
+            uniform vec2 uvScale;
+            varying vec2 vUv;
+
+            void main()
+            {
+
+            vUv = uvScale * uv;
+            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+            gl_Position = projectionMatrix * mvPosition;
+
+            // __SHADOWMAP_VERTEX__
+
+            }
+
+        </script>
+
+		<script>
+			var container = document.getElementById( 'container' ), stats;
+
+			var camera, scene, renderer;
+            var clock = new THREE.Clock();
+			var group;
+			var time = 0;
+			var startTime = Date.now();
+			var mesh, particlesMesh, material, indexArray = [], pulsateTime = 0;
+			var fov = 90, distance = -1200, ndistance = distance, isUserInteracting, onPointerDownPointerX, onPointerDownPointerY,
+			position = { x:0, y: 0 }, onPointerDownLon, onPointerDownLat, lon = 0, lat = 0, ellapsedFactor, phi, theta;
+
+            var FLOOR = -250;
+
+			var dancer;
+
+			function createDendrite( settings ) {
+				
+				if( mesh ) scene.remove( mesh );
+				
+				mesh = new THREE.Object3D();
+				indexArray = [];
+				var vCount = 0;
+				
+				var 
+					arms = settings.arms,
+					twistiness = settings.twistiness,
+					randomness = settings.randomness,
+					minLength = settings.minLength,
+					maxLength = settings.maxLength,
+					length;
+
+				var pos = new THREE.Vector3( 0,100,0 );
+				var scale = .5;
+
+				var normalTexture, blurTexture;
+				switch( dParams.finish ) {
+					case 'solid':
+						normalTexture = THREE.ImageUtils.loadTexture( "sprite-shadow.png" );
+						blurTexture = THREE.ImageUtils.loadTexture( "sprite.png" );
+						break;
+					case 'metallic':
+						normalTexture = THREE.ImageUtils.loadTexture( "noise.png" );
+						blurTexture = THREE.ImageUtils.loadTexture( "noise2.png" );
+						break;
+					case 'abstract':
+						normalTexture = THREE.ImageUtils.loadTexture( "sprite-round-sharp.png" );
+						blurTexture = THREE.ImageUtils.loadTexture( "sprite-round.png" );
+						break;
+					case 'cloudy':
+						normalTexture = THREE.ImageUtils.loadTexture( "cloud.png" );
+						blurTexture = THREE.ImageUtils.loadTexture( "cloud-blur.png" );
+						break;
+					case 'fuzzy':
+						normalTexture = THREE.ImageUtils.loadTexture( "splatter.png" );
+						blurTexture = THREE.ImageUtils.loadTexture( "splatter-blur.png" );
+						break;
+				}
+			
+				for( var a = 0; a < arms; a ++ ) {
+
+					indexArray[ a ] = [];
+					length = minLength + Math.random() * ( maxLength - minLength );
+					scale = .5;
+
+					pos.set( 0, 0, 0 );
+					var dir = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
+					dir.normalize();
+
+					for( var b = 0; b < length; b ++ ) {
+
+						var ndir = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
+						ndir.normalize();
+						var diff = new THREE.Vector3( dir.x, dir.y, dir.z );
+						diff.sub( ndir, dir );
+						diff.multiplyScalar( twistiness );
+						dir.add( dir, diff ); 
+						dir.normalize();
+						
+						scale += .1 * ( .5 - Math.random() );
+						if( scale < .2 ) scale = .2;
+						if( scale > .3 ) scale = .3;
+						
+						scale -= .001 * b;
+						scale *= 1.1;
+						
+						if( scale < 0 ) scale = 0;
+						
+						var offset = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
+						offset.normalize();
+						
+						var udir = new THREE.Vector3( dir.x, dir.y, dir.z );
+						offset.normalize();
+						offset.multiplyScalar( randomness );
+						udir.add( udir, offset );
+						udir.normalize();
+						udir.multiplyScalar( scale * 50 );
+						pos.add( pos, udir );
+						
+						var c = new THREE.Color();
+						var hs = { s: .9 + .7 * scale, v: .5 + 2 * scale - .5 * ( 1 - 2 * ( b / length ) ) };
+						hs.s -= .1 * b / length;
+						hs.v += .8 * b / length;
+						c.setHSV( .93, hs.s, hs.v );
+						
+						var material = new THREE.ShaderMaterial( {
+
+							uniforms: {
+
+								normal: { type: "t", value: 1, texture: normalTexture },
+								blur: { type: "t", value: 2, texture: blurTexture },
+								scale: { type: 'f', value: scale },
+								originalScale: { type: 'f', value: scale },
+								impulse: { type: 'f', value: 0 },
+								colour: { type: 'v3', value: new THREE.Vector3( c.r, c.g, c.b ) },
+								baseColour: { type: 'v3', value: new THREE.Vector3( .93, hs.s, hs.v ) },
+								z: { type: 'f', value: pos.z },
+								rotation: { type: 'f', value: ( dParams.finish == 'metallic' )?0:Math.random() * 2 * Math.PI },
+								arm: { type: 'f', value: a },
+								opacity: { type: 'f', value: 1 },
+								resolution: { type: 'v2', value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
+								
+							},
+							vertexShader: document.getElementById( 'vs-particles' ).textContent,
+							fragmentShader: document.getElementById( 'fs-particles' ).textContent,
+							transparent: true
+
+						} );
+						
+						var plane = new THREE.Mesh( new THREE.PlaneGeometry( 300, 300 ), material );
+						plane.position.set( pos.x, pos.y, pos.z );
+						mesh.add( plane );
+						
+						indexArray[ a ].push( vCount );
+						vCount++;
+
+					}
+
+				}
+				
+				scene.add( mesh );
+
+				var occlusion = [];
+				for( var j = 0; j < mesh.children.length; j++ ) {
+					occlusion[ j ] = { v: 0, c: 0 };
+					for( var i = 0; i < mesh.children.length; i++ ) {
+						if( i != j ) {
+							var p = new THREE.Vector3();
+							p.copy( mesh.children[ j ].position );
+							p.sub( p, mesh.children[ i ].position );
+							var d = p.lengthSq();
+							if( d < 100000 ) {
+								occlusion[ j ].c++;
+								occlusion[ j ].v += 1 - d / 100000;
+							}
+						}
+					}
+				}
+				
+				for( var j = 0; j < mesh.children.length; j++ ) {
+					if( occlusion[ j ].c > 0 ) {
+						mesh.children[ j ].material.uniforms.baseColour.value.y -= .1 * occlusion[ j ].v / occlusion[ j ].c
+						mesh.children[ j ].material.uniforms.baseColour.value.z -= .75 * occlusion[ j ].v / occlusion[ j ].c;
+					}
+				}
+			}
+			
+			
+			var dendriteParams = function() {
+				this.arms = 15;
+				this.twistiness = .01;
+				this.randomness = .60;
+				this.minLength = 40;
+				this.maxLength = 100;
+				this.animate = true;
+				this.pulsate = true;
+				this.particles = false;
+//				this.finish = 'fuzzy';
+				this.finish = 'metallic';
+				this.randomize = function() {
+					dParams.arms = 1 + Math.round( Math.random() * 20 );
+					dParams.minLength = 1 + Math.round( Math.random() * 199 );
+					dParams.maxLength = dParams.minLength + Math.round( Math.random() * ( 200 - dParams.minLength ) );
+					dParams.twistiness = Math.random() * .3;
+					dParams.randomness = Math.random() * .6;
+					dParams.render();
+				};
+				this.render = function() {
+					createDendrite( {
+						arms: this.arms,
+						twistiness: this.twistiness,
+						randomness: this.randomness,
+						minLength: this.minLength,
+						maxLength: this.maxLength
+					} );
+				};
+				this.fullscreen = function() {
+					var docElm = container;
+					if (docElm.requestFullscreen) {
+							docElm.requestFullscreen();
+					}
+					else if (docElm.mozRequestFullScreen) {
+							docElm.mozRequestFullScreen();
+					}
+					else if (docElm.webkitRequestFullScreen) {
+							docElm.webkitRequestFullScreen();
+					}
+				}
+			};
+			
+			var dParams = new dendriteParams();
+			
+			if( Detector.webgl ) {
+				window.addEventListener( 'load', init, false );
+			}
+			
+			function init() {
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 5000 );
+				camera.position.z = 2000;
+				camera.target = new THREE.Vector3();
+
+				scene = new THREE.Scene();
+
+                scene.fog = new THREE.Fog( 0xffffff, 2000, 5000 );
+                scene.fog.color.setHSV( 0.6, 0.37, 0.051275 );
+
+                spotLight = new THREE.SpotLight( 0xffffff, 1.025 );
+                spotLight.angle = 1;
+                spotLight.distance = 10000;
+                spotLight.exponent = 30;
+                spotLight.position.set( 0, 300, 1200 );
+                scene.add( spotLight );
+
+                spotLight.castShadow = true;
+
+                spotLight.shadowMapWidth = 2048;
+                spotLight.shadowMapHeight = 2048;
+
+                spotLight.shadowCameraFar = 5000;
+                spotLight.shadowCameraFov = 65;
+                spotLight.shadowBias = -0.001;
+
+                spotLight.target.position.set( 0, 200, 0 );
+
+                lightTop = new THREE.DirectionalLight( 0xffffff, 1.5 );
+                lightTop.color.setHSV( 0.6, 0.31, 1 );
+                lightTop.position.set( 0, 1, 1 );
+                scene.add( lightTop );
+
+                lightBottom1 = new THREE.DirectionalLight( 0xffffff, 1.25 );
+                lightBottom1.color.setHSV( 0.075, 0.85, 1 );
+                lightBottom1.position.set( 0, -1, 0 );
+                scene.add( lightBottom1 );
+
+
+                lightBottom2 = new THREE.DirectionalLight( 0xffffff, 1.25 );
+                lightBottom2.color.setHSV( 0.075, 0.85, 1 );
+                lightBottom2.position.set( 0, -1, 1 );
+                scene.add( lightBottom2 );
+
+				dParams.render();
+
+                // ground plane
+                var uniforms = THREE.UniformsUtils.merge( [
+
+                    THREE.UniformsLib[ "fog" ],
+                    THREE.UniformsLib[ "shadowmap" ],
+
+                    {
+
+                        time: { type: "f", value: 1.0 },
+                        resolution: { type: "v2", value: new THREE.Vector2() },
+                        uvScale: { type: "v2", value: new THREE.Vector2( 8.0, 4.0 ) },
+                        texture1: { type: "t", value: 0, texture: null },
+                        texture2: { type: "t", value: 1, texture: null },
+
+                    }
+
+                ] );
+
+                var vertexShader = document.getElementById( 'vertexShader' ).textContent;
+                var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
+
+                fragmentShader = fragmentShader.replace( "// __FOG_FRAGMENT__",  THREE.ShaderChunk[ "fog_fragment" ] );
+                fragmentShader = fragmentShader.replace( "// __FOG_PARS_FRAGMENT__",  THREE.ShaderChunk[ "fog_pars_fragment" ] );
+
+                fragmentShader = fragmentShader.replace( "// __SHADOWMAP_PARS_FRAGMENT__",  THREE.ShaderChunk[ "shadowmap_pars_fragment" ] );
+                fragmentShader = fragmentShader.replace( "// __SHADOWMAP_FRAGMENT__",  THREE.ShaderChunk[ "shadowmap_fragment" ] );
+
+                vertexShader = vertexShader.replace( "// __SHADOWMAP_PARS_VERTEX__",  THREE.ShaderChunk[ "shadowmap_pars_vertex" ] );
+                vertexShader = vertexShader.replace( "// __SHADOWMAP_VERTEX__",  THREE.ShaderChunk[ "shadowmap_vertex" ] );
+
+
+                groundMaterial = new THREE.ShaderMaterial( {
+
+                    uniforms: THREE.UniformsUtils.clone( uniforms ),
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
+                    fog: true
+
+                } );
+
+//                geometry = new THREE.PlaneGeometry( 8000, 8000 );
+//
+//                mesh = new THREE.Mesh( geometry, groundMaterial );
+//                mesh.position.set( 0, FLOOR, 0 );
+//                scene.add( mesh );
+//
+//                mesh.receiveShadow = true;
+
+
+				renderer = new THREE.WebGLRenderer( );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild( renderer.domElement );
+
+                var scale = 5;
+                var dy = 15;
+
+                var loader = new THREE.JSONLoader(),
+                        callback = function( geometry ) { createScene( geometry,  0, FLOOR, 0, 7 ) };
+
+                loader.load( "js/hellknight2.js", function( geometry ) {
+                    createScene( geometry, 1000, FLOOR, 1400, scale );
+                    createScene( geometry, -1400, FLOOR, 1400, scale );
+
+                    createScene( geometry, -1000, FLOOR, -1400, scale);
+                    createScene( geometry, 1400, FLOOR, -1400, scale);
+                });
+
+                createParticles();
+                try {
+                    dancer = parent.window.$('#body_container').data('dancer');
+                    setKicks();
+                } catch(err) {
+                    var audio  = document.getElementsByTagName('audio')[0];
+                    Modernizr.load({
+                        load: [
+                            '../../js/dancer/dancer.min.js',
+                            '../../js/dancer/kick.js',
+                            '../../js/dancer/adapterWebkit.js',
+                            '../../js/dancer/adapterMoz.js',
+                            '../../js/dancer/fft.js',
+                            '../../js/dancer/dancer.fft.js'
+                        ],
+                        complete: function() {
+                            try {
+                                dancer = new Dancer();
+                                dancer.load(audio);
+
+                                if (dancer.isLoaded()) {
+                                    dancer.play();
+                                    setKicks();
+                                }
+                            } catch(err) {
+                                console.log(err);
+                            }
+                        }
+                    });
+                }
+
+                animate();
+
+            }
+
+            function setKicks() {
+                var kickCount1=0, kickCount2=0, kickCount3=0;
+                var kick1 = dancer.createKick({
+                    frequency: [0, 0],
+                    threshold: .1,
+                    onKick: function() {
+                        kickCount1++;
+                        if (animations.length == 0) return;
+                        if (kickCount1%4==0) {
+                            if (!animations[0].isPlaying) animations[0].play(false);
+                            if (!animations[1].isPlaying) animations[1].play(false);
+                        }
+                        else if (kickCount1%16==0) {
+                            animations[0].stop();
+                            animations[1].stop();
+                            animations[0].currentTime = 0;
+                            animations[1].currentTime = 0;
+                            animations[0].play(false);
+                            animations[1].play(false);
+                        }
+                        if (!animations[2].isPlaying) {
+                            animations[2].play();
+                        }
+                        if (!animations[3].isPlaying) {
+                            animations[3].play();
+                        }
+                    }
+                });
+                kick1.on();
+
+                var kick2 = dancer.createKick({
+                    frequency: [0,0],
+                    threshold: .2,
+                    onKick: function() {
+                        kickCount2++;
+                        if (animations.length == 0) return;
+                        if (kickCount2%4==0) {
+                            animations[2].stop();
+                            animations[2].currentTime = 0;
+                            animations[2].play(false);
+                            if (!animations[3].isPlaying) {
+                                animations[3].play();
+                            }
+                        }
+                    }
+                });
+                kick2.on();
+
+                var kick3 = dancer.createKick({
+                    frequency: [10,20],
+                    threshold: .02,
+                    onKick: function() {
+                        kickCount3++;
+                        if (animations.length == 0) return;
+                        if (kickCount3%16==0) {
+                            animations[3].stop();
+                            animations[3].currentTime = 0;
+                            animations[3].play(false);
+                        }
+                    }
+                });
+                kick3.on();
+            }
+
+            function ensureLoop( animation ) {
+
+                for ( var i = 0; i < animation.hierarchy.length; i ++ ) {
+
+                    var bone = animation.hierarchy[ i ];
+
+                    var first = bone.keys[ 0 ];
+                    var last = bone.keys[ bone.keys.length - 1 ];
+
+                    last.pos = first.pos;
+                    last.rot = first.rot;
+                    last.scl = first.scl;
+                }
+            }
+
+
+
+            var animations = [];
+            function createScene( geometry, x, y, z, s ) {
+
+                ensureLoop( geometry.animation );
+
+                geometry.computeBoundingBox();
+                var bb = geometry.boundingBox;
+
+                THREE.AnimationHandler.add( geometry.animation );
+
+                for ( var i = 0; i < geometry.materials.length; i ++ ) {
+                    var m = geometry.materials[ i ];
+                    m.skinning = true;
+                    m.wrapAround = true;
+
+                    if ( m.uniforms ) {
+                        m.uniforms.wrapRGB.value.set( 0.75, 0.5, 0.5 );
+                    }
+
+                    if ( m.name === "archvile_hand" ) {
+                        m.metal = true;
+                        m.emissive.setRGB( 0.95, 0.95, 0.95 );
+
+                        m.polygonOffset = true;
+                        m.polygonOffsetFactor = -3;
+                        m.polygonOffsetUnits = 1;
+                    }
+
+                    if ( m.name === "cyberdemon_body" ) {
+                        m.metal = true;
+                    }
+                }
+
+
+                var mesh = new THREE.SkinnedMesh( geometry, new THREE.MeshFaceMaterial() );
+                mesh.position.set( x - 200, y - bb.min.y * s, z );
+                mesh.scale.set( s, s, s );
+                mesh.rotation.y = Math.PI * -1.5 * animations.length;
+                scene.add( mesh );
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+
+                animation = new THREE.Animation( mesh, geometry.animation.name );
+                animation.interpolationType = THREE.AnimationHandler.LINEAR;
+                animations.push(animation);
+                console.log('num animations: '+animations.length);
+            }
+
+			function createParticles() {
+				var texture = THREE.ImageUtils.loadTexture( 'coc.png' );
+				var blurTexture = THREE.ImageUtils.loadTexture( 'coc-blur.png' );
+				
+				var size = 2000;
+				particlesMesh = new THREE.Object3D();
+				for( var j = 0; j < 100; j++ ) {
+
+					var z = ( .5 - Math.random() ) * size;
+					var material = new THREE.ShaderMaterial( {
+
+						uniforms: {
+
+							normal: { type: "t", value: 1, texture: texture },
+							blur: { type: "t", value: 2, texture: blurTexture },
+							scale: { type: 'f', value: 1 },
+							originalScale: { type: 'f', value: 1 },
+							impulse: { type: 'f', value: 0 },
+							colour: { type: 'v3', value: new THREE.Vector3( 255, 255, 255 ) },
+							baseColour: { type: 'v3', value: new THREE.Vector3( 0,0,0 ) },
+							z: { type: 'f', value: z },
+							rotation: { type: 'f', value: 0 },
+							opacity: { type: 'f', value: .1 + Math.random() * .1 },
+							resolution: { type: 'v2', value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
+							
+						},
+						vertexShader: document.getElementById( 'vs-particles' ).textContent,
+						fragmentShader: document.getElementById( 'fs-particles' ).textContent,
+						transparent: true
+
+					} );
+					
+					var s = 100 + Math.random() * 100; 
+					var plane = new THREE.Mesh( new THREE.PlaneGeometry( s, s ), material );
+					plane.position.set( ( .5 - Math.random() ) * size, ( .5 - Math.random() ) * size, z );
+					particlesMesh.add( plane );
+				}
+				scene.add( particlesMesh );
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+			}
+			
+			function pow() {
+				ndistance = -500;
+				setTimeout( function() {
+					ndistance = -800;
+				}, 500 );
+			}
+
+            var cameraAngle = 0;
+			function render() {
+
+				time = Date.now();
+				var ellapsedTime = time - startTime;
+				startTime = time;
+				var delta = ellapsedTime / 16;
+
+				if( !particlesMesh || (particlesMesh.parent && !dParams.particles )) {
+					scene.remove( particlesMesh );
+				}
+				
+				if( particlesMesh && !particlesMesh.parent && dParams.particles ) {
+					scene.add( particlesMesh );
+				}
+				
+				if( dParams.pulsate ) {
+					pulsateTime += delta;
+					for( var j = 0; j < mesh.children.length; j++ ) {
+						mesh.children[ j ].material.uniforms.scale.value = mesh.children[ j ].material.uniforms.originalScale.value + .25 * mesh.children[ j ].material.uniforms.originalScale.value * Math.sin( .1 * j + .05 * pulsateTime );
+					}
+				}
+
+				if( dParams.animate && dancer ) {
+					var c = new THREE.Color();
+					var hue = .5 + .5 * Math.sin( .0001 * time );
+					hue += dancer.getFrequency(0);
+					if( hue > .99 ) hue = .99;
+					for( var j = 0; j < mesh.children.length; j++ ) {
+						var u = mesh.children[ j ].material.uniforms;
+						var s = .5 * ( .5 + .5 * Math.sin( .01 * ( .1 * j + .1 * time ) ) );
+						c.setHSV( hue, u.baseColour.value.y - dancer.getFrequency( 0 ), u.baseColour.value.z + s + dancer.getFrequency( 0 ) );
+						mesh.children[ j ].material.uniforms.colour.value.set( c.r, c.g, c.b );
+                        u.scale.z = 100*dancer.getFrequency(0);
+					}
+					
+					mesh.rotation.x += delta * dancer.getFrequency( 0 );
+					mesh.rotation.y += delta * dancer.getFrequency( 10 );
+					mesh.rotation.z += delta * dancer.getFrequency( 20 );
+					
+					if( particlesMesh ) {
+//						particlesMesh.rotation.x += delta * .006 * dancer.getByteFrequency( 0 );
+//						particlesMesh.rotation.y += delta * .006 * dancer.getByteFrequency( 1 );
+//						particlesMesh.rotation.z += delta * .006 * dancer.getByteFrequency( 2 );
+					}
+					
+					position.x += delta * dancer.getFrequency( 1 );
+					position.y += delta * dancer.getFrequency( 0 );
+					
+					ndistance = 1 * ( dancer.getFrequency( 0, 2 ) );
+					
+					for( var j = 0; j < indexArray.length; j++ ) {
+						var a = indexArray[ j ];
+						for( var i = a.length - 1; i > 0; i-- ) {
+							if (mesh.children[ a[ i - 1 ] ] && mesh.children[ a[ i ] ]) {
+                                var up = mesh.children[ a[ i - 1 ] ].material.uniforms;
+                                var uc = mesh.children[ a[ i ] ].material.uniforms;
+							    var impulse = up.impulse.value;
+                                impulse = uc.impulse.value + ( impulse - uc.impulse.value ) * .99;
+                                impulse -= 5;
+                                if( impulse < uc.originalScale.value ) impulse = uc.originalScale.value;
+                                uc.impulse.value = impulse;
+                            }
+						}
+						var f =  dancer.getFrequency( j );
+                        if (mesh.children[ a[ 0 ] ]) {
+                            var c = mesh.children[ a[ 0 ] ].material.uniforms;
+                            c.impulse.value = f;
+                        }
+//						for( var i = 0; i < a.length; i++ ) {
+//							var uc = mesh.children[ a[ i ] ].material.uniforms;
+////							uc.scale.value = c.originalScale.value * uc.impulse.value;
+////                            uc.opacity = 0.001*dancer.getFrequency(0);
+//						}
+					}
+					
+				}
+				
+				if( ndistance < -1500 ) ndistance = -1500;
+				if( ndistance > -500 ) ndistance = -500;
+				
+				distance += ( ndistance - distance ) * 40 * delta;
+//                distance = 1;
+				var olon = lon, olat = lat;
+				var s = .15 * delta;
+				lon = lon + ( position.x - olon ) * s;
+				lat = lat + ( position.y - olat ) * s;
+					
+				lat = Math.max( - 85, Math.min( 85, lat ) );
+				phi = ( 90 - lat ) * Math.PI / 180;
+				theta = lon * Math.PI / 180;
+
+                // Move the camera in a non-circular orbit
+                camera.position.z = Math.cos(cameraAngle) * 1000;
+                camera.position.x = Math.sin(cameraAngle) * 3000;
+//                camera.position.y = Math.sin(cameraAngle * 1.35) * 1000;
+
+                // Update camera angle for orbit
+                if (dancer) cameraAngle += dancer.getFrequency(10);
+                // Render the scene
+				camera.lookAt( camera.target );
+
+                var delta = clock.getDelta();
+                try {
+                    THREE.AnimationHandler.update( delta*5 );
+                } catch(err) {}
+
+                lightBottom1.intensity = THREE.Math.clamp( lightBottom1.intensity + ( 0.5 - Math.random() ) * 0.1, 0.75, 1.5 );
+                lightBottom2.intensity = THREE.Math.clamp( lightBottom2.intensity + ( 0.5 - Math.random() ) * 0.05, 0.75, 1.5 );
+
+                fogIntensity = 0.1 + ( 1 + Math.sin( 0.0002 * Date.now() ) ) * 0.35;
+                //fogIntensity = 0.5;
+
+                scene.fog.color.setHSV( 0.07, 0.37, fogIntensity );
+                renderer.setClearColor( scene.fog.color, 1 );
+
+                lightTop.intensity = fogIntensity * 2 + 0.2;
+                spotLight.intensity = fogIntensity * 1 + 0.1;
+
+				renderer.render( scene, camera );
+			}
+
+		</script>
+</body>
+</html>

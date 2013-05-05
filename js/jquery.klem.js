@@ -17,19 +17,6 @@
                     in: {
                         effect: 'fadeIn',
                         done: function() {
-                            $('div.body').trigger('done-h1-klem-1');
-                        }
-                    }
-                })
-        });
-
-        $('div.body').one('done-h1-klem-1', function() {
-            $('h1.header').replaceWith($('<h1 class="header typeface-js middle"></h1>'));
-            $('h1.header').html('no')
-                .textillate({
-                    in: {
-                        effect: 'fadeIn',
-                        done: function() {
                             $('div.body').trigger('done-h1-klem-2');
                         }
                     }
@@ -51,7 +38,7 @@
 
         $('div.body').one('done-h1-klem-3', function() {
             $('h1.header').replaceWith($('<h1 class="header typeface-js middle"></h1>'));
-            $('h1.header').html('jansi lives in Emmen')
+            $('h1.header').html('richard lives in Emmen')
                 .textillate({
                     in: {
                         effect: 'fadeIn',
@@ -83,6 +70,9 @@
                             effect: 'fadeIn',
                             done: function() {
                                 $('h1.header').fadeOut(function() {
+                                    $('div.content,div.earth,div.img').hide();
+                                    var o = $('div.body').offset();
+                                    $('div.img').css('left', o.left+($('div.body').width()/2 - $('div.img').width()/2))
                                     $('div.img').html('<img src="img/bejaarden.jpg" />');
                                     $('div.img').fadeIn(function() {
                                         $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
@@ -116,8 +106,57 @@
         });
 
         $('div.body').one('body-done-klem-5', function() {
-            $('h1.header, div.img, div.content, div.earth').fadeOut(function() {
-                console.log('ready');
+            $('h1.header, div.content, div.earth').fadeOut('slow', function() {
+                $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
+                $('h1.header').html('there is one thing worse than Emmen')
+                    .textillate({
+                        in: {
+                            effect: 'fadeIn',
+                            done: function() {
+                                $('div.content').replaceWith($('<div class="content typeface-js"></div>'));
+                                $('div.content')
+                                    .html('Klazienaveen')
+                                    .textillate({
+                                        in: {
+                                            effect: 'fadeIn',
+                                            duration: 1000,
+                                            done: function() {
+                                                var o = $('div.body').offset();
+                                                $('div.img').css('left', o.left+($('div.body').width()/2 - $('div.img').width()/2))
+                                                $('div.img').html('<img src="img/schrik.jpg" />');
+                                                $('div.img').show();
+                                                $('div.content').fadeOut('slow', function() {
+                                                    $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
+                                                    $('h1.header').html('So Kl and Em form Klem, or kl3m')
+                                                        .textillate({
+                                                            in: {
+                                                                effect: 'fadeIn',
+                                                                duration: 1000,
+                                                                done: function() {
+                                                                    $('div.content').replaceWith($('<div class="content"></div>'));
+                                                                    $('div.content')
+                                                                        .html('(this has absolutely nothing to do with that dutch word for being totally drunk, we\'re not like that)')
+                                                                        .textillate({
+                                                                            in: {
+                                                                                duration: 1000,
+                                                                                effect: 'fadeIn',
+                                                                                done: function() {
+                                                                                    $('div.content').fadeOut('slow', function() {
+                                                                                        deferred.resolve();
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        });
+                                                                }
+                                                            }
+                                                        });
+                                                });
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+                    });
             });
         });
 
