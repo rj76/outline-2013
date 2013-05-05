@@ -8,8 +8,12 @@
         earth.setPosition(current.lat, current.lon);
     };
 
-    $.earth = function () {};
+    $.earth = function(demo) {
+        this.demo = demo;
+    };
+
     $.earth.prototype.start = function() {
+        var self = this;
         var deferred = new $.Deferred();
         var geocoder = new google.maps.Geocoder();
         var could_have_lat_lon = [
@@ -57,7 +61,6 @@
                         $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
                         $('h1.header').show();
                         $('h1.header').html(could_have_text[could_have_text.length - could_have_lat_lon.length-1]);
-                        console.log($('h1.header'));
                         var zoom_in_tween = new TWEEN.Tween(current)
                             .to({zoom: zoom_in}, duration)
                             .onUpdate(function() {earth.setZoom(current.zoom)})
@@ -85,7 +88,6 @@
                                                                             .to({zoom: zoom_out})
                                                                             .onUpdate(function() {earth.setZoom(current.zoom)})
                                                                             .onComplete(function() {
-                                                                                console.log('starting location tween, could_have_lat_lon.length='+could_have_lat_lon.length);
                                                                                 tween.start();
                                                                                 tween.to({lat: latlon[0], lon: latlon[1]}, duration);
                                                                             });

@@ -1,6 +1,6 @@
 (function ($) {
-    $.klem = function ($earth) {
-        this.earth = $earth;
+    $.klem = function (demo) {
+        this.demo = demo;
     };
 
     $.klem.prototype.start = function() {
@@ -75,7 +75,7 @@
         $('div.body').one('body-done-klem-4', function() {
             $('div.content').hide();
             $('div.earth').fadeIn();
-            $.when(self.earth.showKlem('em')).then(function() {
+            $.when(self.demo.$earth.showKlem('em')).then(function() {
                 $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
                 $('h1.header').html('meet the most terrible place on earth')
                     .textillate({

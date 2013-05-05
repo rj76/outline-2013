@@ -31,14 +31,31 @@
         'js/jquery.lettering-0.6.1.min.js',
         'js/typeface-0.15.js',
         'js/atari_font_full_version_regular.typeface.js',
+
         'http://www.webglearth.com/api.js',
+
+        'js/dancer/dancer.min.js',
+        'js/dancer/kick.js',
+        'js/dancer/adapterWebkit.js',
+        'js/dancer/adapterMoz.js',
+        'js/dancer/fft.js',
+        'js/dancer/dancer.fft.js',
+
+        'js/jquery.pre-intro.js',
         'js/jquery.intro.js',
+        'js/jquery.media.js',
         'js/jquery.earth.js',
         'js/jquery.klem.js',
         'js/demo.js'
     ]);
 </script>
+<canvas id="fft" width="700" height="1000"></canvas>
 <div class="body">
+    <audio controls="none" style="display: none">
+        <source src="track/track-2.ogg" type="audio/ogg" />
+        <source src="track/track.mp3" type="audio/mpeg" />
+        Your browser does not support the audio element.
+    </audio>
     <h1 class="header typeface-js"></h1>
     <div class="content typeface-js"></div>
     <div class="earth" id="earth_div"></div>
