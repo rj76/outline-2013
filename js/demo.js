@@ -17,7 +17,6 @@
     };
 
     $.demo.prototype.run = function () {
-        this.bar_count = 0;
         var self = this;
         $.when(self.$media.start()).then(function () {
         });
@@ -25,18 +24,10 @@
 
     $.demo.prototype.second_run = function () {
         var self = this;
-        $.when(self.$intro.start()).then(function () {
-            console.log('starting earth');
-            $.when(self.$earth.start()).then(function () {
-                console.log('starting klem');
-                $.when(self.$klem.start()).then(function () {
-                    console.log('starting visual 1');
+        $.when(self.$intro.start()).then(function() {
+            $.when(self.$earth.start()).then(function() {
+                $.when(self.$klem.start()).then(function() {
                     $.when(self.$visuals.showVisual1()).then(function () {
-                        console.log('stopping visual 1');
-                        $.when(self.$visuals.stopVisual1()).then(function () {
-//                            console.log('starting visual 2');
-//                            self.$visuals.showVisual2();
-                        });
                     });
                 });
             });

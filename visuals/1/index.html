@@ -221,7 +221,7 @@
 			var group;
 			var time = 0;
 			var startTime = Date.now();
-			var mesh, particlesMesh, material, indexArray = [], pulsateTime = 0;
+			var mesh, particlesMesh, material, indexArray = [], pulsateTime = 0, meshDendrite;
 			var fov = 90, distance = -1200, ndistance = distance, isUserInteracting, onPointerDownPointerX, onPointerDownPointerY,
 			position = { x:0, y: 0 }, onPointerDownLon, onPointerDownLat, lon = 0, lat = 0, ellapsedFactor, phi, theta;
 
@@ -231,9 +231,9 @@
 
 			function createDendrite( settings ) {
 				
-				if( mesh ) scene.remove( mesh );
-				
-				mesh = new THREE.Object3D();
+				if( meshDendrite ) scene.remove( meshDendrite );
+
+                meshDendrite = new THREE.Object3D();
 				indexArray = [];
 				var vCount = 0;
 				
@@ -344,7 +344,7 @@
 						
 						var plane = new THREE.Mesh( new THREE.PlaneGeometry( 300, 300 ), material );
 						plane.position.set( pos.x, pos.y, pos.z );
-						mesh.add( plane );
+                        meshDendrite.add( plane );
 						
 						indexArray[ a ].push( vCount );
 						vCount++;
@@ -353,16 +353,16 @@
 
 				}
 				
-				scene.add( mesh );
+				scene.add( meshDendrite );
 
 				var occlusion = [];
-				for( var j = 0; j < mesh.children.length; j++ ) {
+				for( var j = 0; j < meshDendrite.children.length; j++ ) {
 					occlusion[ j ] = { v: 0, c: 0 };
-					for( var i = 0; i < mesh.children.length; i++ ) {
+					for( var i = 0; i < meshDendrite.children.length; i++ ) {
 						if( i != j ) {
 							var p = new THREE.Vector3();
-							p.copy( mesh.children[ j ].position );
-							p.sub( p, mesh.children[ i ].position );
+							p.copy( meshDendrite.children[ j ].position );
+							p.sub( p, meshDendrite.children[ i ].position );
 							var d = p.lengthSq();
 							if( d < 100000 ) {
 								occlusion[ j ].c++;
@@ -372,10 +372,10 @@
 					}
 				}
 				
-				for( var j = 0; j < mesh.children.length; j++ ) {
+				for( var j = 0; j < meshDendrite.children.length; j++ ) {
 					if( occlusion[ j ].c > 0 ) {
-						mesh.children[ j ].material.uniforms.baseColour.value.y -= .1 * occlusion[ j ].v / occlusion[ j ].c
-						mesh.children[ j ].material.uniforms.baseColour.value.z -= .75 * occlusion[ j ].v / occlusion[ j ].c;
+                        meshDendrite.children[ j ].material.uniforms.baseColour.value.y -= .1 * occlusion[ j ].v / occlusion[ j ].c
+                        meshDendrite.children[ j ].material.uniforms.baseColour.value.z -= .75 * occlusion[ j ].v / occlusion[ j ].c;
 					}
 				}
 			}
@@ -515,13 +515,25 @@
 
                 } );
 
-//                geometry = new THREE.PlaneGeometry( 8000, 8000 );
-//
-//                mesh = new THREE.Mesh( geometry, groundMaterial );
-//                mesh.position.set( 0, FLOOR, 0 );
-//                scene.add( mesh );
-//
-//                mesh.receiveShadow = true;
+                groundMaterial.uniforms.texture1.texture = THREE.ImageUtils.loadTexture( "img/cloud.png" );
+				groundMaterial.uniforms.texture2.texture = THREE.ImageUtils.loadTexture( "img/lavatile.jpg" );
+
+				var texture1 = groundMaterial.uniforms.texture1.texture;
+				var texture2 = groundMaterial.uniforms.texture2.texture;
+
+				texture1.wrapS = texture1.wrapT = THREE.RepeatWrapping;
+				texture2.wrapS = texture2.wrapT = THREE.RepeatWrapping;
+
+                var floor_geometry = new THREE.PlaneGeometry( 8000, 8000 );
+
+                var fl = new THREE.Mesh( floor_geometry, groundMaterial );
+                fl.position.set( 0, FLOOR, 0 );
+                fl.rotation.x = Math.PI / 2;
+                fl.doubleSided = true;
+//                fl.rotation.x = fl.r otation.y = fl.rotation.z = 0;
+                fl.receiveShadow = true;
+                scene.add( fl);
+
 
 
 				renderer = new THREE.WebGLRenderer( );
@@ -574,8 +586,32 @@
                     });
                 }
 
+//                addText();
                 animate();
 
+            }
+
+            function addText() {
+                // create a canvas element
+                var canvas1 = document.createElement('canvas');
+                var context1 = canvas1.getContext('2d');
+                context1.font = "Atari Font Full Version";
+                context1.fillStyle = "rgba(255,0,0,0.95)";
+                context1.fillText('Hello, world!', 0, 50);
+
+                // canvas contents will be used for a texture
+                var texture1 = new THREE.Texture(canvas1)
+                texture1.needsUpdate = true;
+
+                var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+//                material1.transparent = true;
+
+                var mesh1 = new THREE.Mesh(
+                        new THREE.PlaneGeometry(canvas1.width, canvas1.height),
+                        material1
+                );
+                mesh1.position.set(-2000,500,0);
+                scene.add( mesh1 );
             }
 
             function setKicks() {
@@ -696,7 +732,7 @@
                 var mesh = new THREE.SkinnedMesh( geometry, new THREE.MeshFaceMaterial() );
                 mesh.position.set( x - 200, y - bb.min.y * s, z );
                 mesh.scale.set( s, s, s );
-                mesh.rotation.y = Math.PI * -1.5 * animations.length;
+                mesh.rotation.y = Math.PI * .5;
                 scene.add( mesh );
 
                 mesh.castShadow = true;
@@ -778,8 +814,8 @@
 				
 				if( dParams.pulsate ) {
 					pulsateTime += delta;
-					for( var j = 0; j < mesh.children.length; j++ ) {
-						mesh.children[ j ].material.uniforms.scale.value = mesh.children[ j ].material.uniforms.originalScale.value + .25 * mesh.children[ j ].material.uniforms.originalScale.value * Math.sin( .1 * j + .05 * pulsateTime );
+					for( var j = 0; j < meshDendrite.children.length; j++ ) {
+                        meshDendrite.children[ j ].material.uniforms.scale.value = meshDendrite.children[ j ].material.uniforms.originalScale.value + .25 * meshDendrite.children[ j ].material.uniforms.originalScale.value * Math.sin( .1 * j + .05 * pulsateTime );
 					}
 				}
 
@@ -788,17 +824,17 @@
 					var hue = .5 + .5 * Math.sin( .0001 * time );
 					hue += dancer.getFrequency(0);
 					if( hue > .99 ) hue = .99;
-					for( var j = 0; j < mesh.children.length; j++ ) {
-						var u = mesh.children[ j ].material.uniforms;
+					for( var j = 0; j < meshDendrite.children.length; j++ ) {
+						var u = meshDendrite.children[ j ].material.uniforms;
 						var s = .5 * ( .5 + .5 * Math.sin( .01 * ( .1 * j + .1 * time ) ) );
 						c.setHSV( hue, u.baseColour.value.y - dancer.getFrequency( 0 ), u.baseColour.value.z + s + dancer.getFrequency( 0 ) );
-						mesh.children[ j ].material.uniforms.colour.value.set( c.r, c.g, c.b );
+                        meshDendrite.children[ j ].material.uniforms.colour.value.set( c.r, c.g, c.b );
                         u.scale.z = 100*dancer.getFrequency(0);
 					}
-					
-					mesh.rotation.x += delta * dancer.getFrequency( 0 );
-					mesh.rotation.y += delta * dancer.getFrequency( 10 );
-					mesh.rotation.z += delta * dancer.getFrequency( 20 );
+
+                    meshDendrite.rotation.x += delta * dancer.getFrequency( 0 );
+                    meshDendrite.rotation.y += delta * dancer.getFrequency( 10 );
+                    meshDendrite.rotation.z += delta * dancer.getFrequency( 20 );
 					
 					if( particlesMesh ) {
 //						particlesMesh.rotation.x += delta * .006 * dancer.getByteFrequency( 0 );
@@ -814,9 +850,9 @@
 					for( var j = 0; j < indexArray.length; j++ ) {
 						var a = indexArray[ j ];
 						for( var i = a.length - 1; i > 0; i-- ) {
-							if (mesh.children[ a[ i - 1 ] ] && mesh.children[ a[ i ] ]) {
-                                var up = mesh.children[ a[ i - 1 ] ].material.uniforms;
-                                var uc = mesh.children[ a[ i ] ].material.uniforms;
+							if (meshDendrite.children[ a[ i - 1 ] ] && meshDendrite.children[ a[ i ] ]) {
+                                var up = meshDendrite.children[ a[ i - 1 ] ].material.uniforms;
+                                var uc = meshDendrite.children[ a[ i ] ].material.uniforms;
 							    var impulse = up.impulse.value;
                                 impulse = uc.impulse.value + ( impulse - uc.impulse.value ) * .99;
                                 impulse -= 5;
@@ -825,8 +861,8 @@
                             }
 						}
 						var f =  dancer.getFrequency( j );
-                        if (mesh.children[ a[ 0 ] ]) {
-                            var c = mesh.children[ a[ 0 ] ].material.uniforms;
+                        if (meshDendrite.children[ a[ 0 ] ]) {
+                            var c = meshDendrite.children[ a[ 0 ] ].material.uniforms;
                             c.impulse.value = f;
                         }
 //						for( var i = 0; i < a.length; i++ ) {

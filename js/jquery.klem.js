@@ -38,7 +38,7 @@
 
         $('div.body').one('done-h1-klem-3', function() {
             $('h1.header').replaceWith($('<h1 class="header typeface-js middle"></h1>'));
-            $('h1.header').html('richard lives in Emmen')
+            $('h1.header').html('we ended up in Emmen')
                 .textillate({
                     in: {
                         effect: 'fadeIn',
@@ -64,7 +64,7 @@
             $('div.earth').fadeIn();
             $.when(self.demo.$earth.showKlem('em')).then(function() {
                 $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
-                $('h1.header').html('meet the most terrible place on earth')
+                $('h1.header').html('possibly the most miserable place on earth')
                     .textillate({
                         in: {
                             effect: 'fadeIn',
@@ -83,7 +83,7 @@
                                                     done: function() {
                                                         $('div.content').replaceWith($('<div class="content"></div>'));
                                                         $('div.content')
-                                                            .html('lot\'s and lot\'s of old people')
+                                                            .html('lots and lots of old people')
                                                             .textillate({
                                                                 in: {
                                                                     effect: 'fadeIn',
@@ -95,10 +95,8 @@
                                                     }
                                                 }
                                             });
-
                                     })
                                 })
-
                             }
                         }
                     });
