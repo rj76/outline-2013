@@ -246,9 +246,7 @@
 					length;
 
 				var pos = new THREE.Vector3(dendrite_start_x, 1000, 0 );
-//                var pos = new THREE.Vector3( 0,0,0 );
 				var scale = .5;
-//                meshDendrite.scale = 1000;
 
 				var normalTexture, blurTexture;
 				switch( dParams.finish ) {
@@ -605,7 +603,6 @@
                             container.appendChild( renderer.domElement );
                             if (!externalDancer) {
                                 dancer.play();
-                                console.log('playing track');
                             }
                             animate();
                             doAnimations();
@@ -630,10 +627,8 @@
                         scene.remove(floor);
                         camera.position.z =camera.position.x = -1000;
                         rotateFactor = 1000;
-                        console.log('doing dendrite');
                         state = 'dendrite';
                         $.when(showDendrite()).then(function() {
-                            console.log('triggering done');
                             if (parent.window) parent.window.$('#body_container').trigger('visual-done');
                         });
                     });
@@ -658,7 +653,6 @@
             function showHellnight() {
                 var d = $.Deferred(), c=1;
                 $('#container').on('kick', function() {
-                    console.log('hellnight kick count: '+c);
                     if(c++>=22) {
                         d.resolve();
                     }
@@ -669,7 +663,6 @@
             function showDendrite() {
                 var d = $.Deferred(), c=1;
                 $('#container').on('kick', function() {
-                    console.log('dendrite kick count: '+c);
                     if(c++>=28) {
                         kick1.off();
                         kick2.off();
@@ -726,7 +719,6 @@
                 var s = .5;
                 mesh.position.set( x - 200, y - bb.min.y, z );
                 mesh.scale.set( s, s, s );
-                mesh.rotation.y = Math.PI/2*-1;
                 scene.add( mesh );
 
                 mesh.castShadow = true;
@@ -782,12 +774,6 @@
                         if (meshDendrite.children[ a[ 0 ] ]) {
                             var c = meshDendrite.children[ a[ 0 ] ].material.uniforms;
                             c.impulse.value = f;
-//                            for( var i = 0; i < a.length; i++ ) {
-//                                var uc = meshDendrite.children[ a[ i ] ].material.uniforms;
-//                                uc.scale.value = c.originalScale.value * uc.impulse.value;
-////                                console.log('scale='+uc.scale.value);
-//                                uc.opacity = 1+dancer.getFrequency(0);
-//                            }
                         }
                     }
                 }
@@ -834,7 +820,7 @@
                     camera.position.z = Math.cos(cameraAngle) * 800+100;
                     camera.position.x = Math.sin(cameraAngle) * 500+100;
                     camera.position.y = FLOOR+100;
-                    cameraAngle -= 1*dancer.getFrequency(10);
+                    cameraAngle -= 1*dancer.getFrequency(0);
                     camera.lookAt(floor.position);
                 }
                 else if (rotateCamDendrite) {
@@ -860,36 +846,25 @@
                         if (animations.length == 0) return;
                         if (kickCount1%4==0) {
                             $('#container').trigger('kick');
-//                            console.log('animating 0 and 1');
                             if (!animations[0].isPlaying) animations[0].play(false);
                             if (!animations[1].isPlaying) animations[1].play(false);
-                            models[0].rotation.y = models[1].rotation.y = Math.PI/2*-1;
                         }
-//                        if (!animations[2].isPlaying) {
-//                            animations[2].play();
-//                        }
-//                        if (!animations[3].isPlaying) {
-//                            animations[3].play();
-//                        }
                     }
                 });
                 kick1.on();
 
                 kick2 = dancer.createKick({
                     frequency: [10,20],
-                    threshold: .1,
+                    threshold: .01,
                     onKick: function() {
                         kickCount2++;
                         if (animations.length == 0) return;
-//                        console.log('kick2');
                         if (kickCount2%4==0) {
-//                            console.log('animating 2 and 3');
                             animations[2].stop();
                             animations[3].stop();
                             animations[2].currentTime = animations[3].currentTime = 0;
                             animations[2].play(false);
                             animations[3].play(false);
-                            models[2].rotation.y = models[3].rotation.y = Math.PI/2*-1;
                         }
                     }
                 });
