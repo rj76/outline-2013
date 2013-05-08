@@ -50,7 +50,10 @@
                         .onceAt(44, function() {
                             self.demo.second_run();
                         })
-                        .onceAt(220, function() {
+                        .onceAt(198, function() {
+                            $('#body_container').trigger('stop-hellnight');
+                        })
+                        .onceAt(218, function() {
                             if ($('div.iframe').is(":visible")) {
                                 $('#body_container').trigger('visual-done');
                             }
@@ -62,7 +65,7 @@
 //                        var int=window.setInterval(function(){$('div.time').html(dancer.getTime())},1000);
                         $('#audio').bind('ended', function() {
                             $('div.outro').fadeOut();
-                            window.clearInterval(int);
+//                            window.clearInterval(int);
                         });
 
                         $('div.body').data('dancer', dancer);

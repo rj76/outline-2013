@@ -651,10 +651,8 @@
 
             function showHellnight() {
                 var d = $.Deferred(), c=1;
-                $('#container').on('kick', function() {
-                    if(c++>=22) {
-                        d.resolve();
-                    }
+                if (parent.window) parent.window.$('#body_container').on('stop-hellnight', function() {
+                    d.resolve();
                 });
                 return d;
             }
