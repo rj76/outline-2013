@@ -26,11 +26,11 @@
 
     $.demo.prototype.second_run = function () {
         var self = this;
-//        $.when(self.$intro.start()).then(function() {
-//            $.when(self.$earth.start()).then(function() {
-//                $.when(self.$klem.start()).then(function() {
-//                    $.when(self.$visuals.showVisual1()).then(function () {
-//                        $.when(self.$visuals.stopVisual1()).then(function () {
+        $.when(self.$intro.start()).then(function() {
+            $.when(self.$earth.start()).then(function() {
+                $.when(self.$klem.start()).then(function() {
+                    $.when(self.$visuals.showVisual1()).then(function () {
+                        $.when(self.$visuals.stopVisual1()).then(function () {
                             Modernizr.load({
                                 load: [
                                     'css/atari.css'
@@ -39,11 +39,11 @@
                                     self.$outro.start();
                                 }
                             });
-//                        });
-//                    });
-//                });
-//            });
-//        });
+                        });
+                    });
+                });
+            });
+        });
     };
 
     $demo = new $.demo();
