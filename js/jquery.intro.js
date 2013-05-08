@@ -89,7 +89,7 @@
 
         $('div.body').one('body-done-5', function() {
             $('div.content').replaceWith($('<div class="content"></div>'));
-            $('div.content').html('Hope you enjoy')
+            $('div.content').html('enjoy')
             $('div.content')
                 .textillate({
                     in: {

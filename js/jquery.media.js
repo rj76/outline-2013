@@ -54,6 +54,12 @@
                     if (dancer.isLoaded()) {
                         dancer.play();
                         deferred.resolve();
+                        var int=window.setInterval(function(){$('div.time').html(dancer.getTime())},1000);
+                        $('#audio').bind('ended', function() {
+                            $('div.outro').fadeOut();
+                            window.clearInterval(int);
+                        });
+
                         $('div.body').data('dancer', dancer);
                     } else {
                     }

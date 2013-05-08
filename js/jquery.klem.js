@@ -60,7 +60,7 @@
         });
 
         $('div.body').one('body-done-klem-4', function() {
-            $('div.content').hide();
+            $('h1.header, div.content').hide();
             $('div.earth').fadeIn();
             $.when(self.demo.$earth.showKlem('em')).then(function() {
                 $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
@@ -125,7 +125,7 @@
                                                 $('div.img').show();
                                                 $('div.content').fadeOut('slow', function() {
                                                     $('h1.header').replaceWith($('<h1 class="header typeface-js"></h1>'));
-                                                    $('h1.header').html('So Kl and Em form Klem, or kl3m')
+                                                    $('h1.header').html('So we\'re making useless things nobody asked for')
                                                         .textillate({
                                                             in: {
                                                                 effect: 'fadeIn',
@@ -133,11 +133,11 @@
                                                                 done: function() {
                                                                     $('div.content').replaceWith($('<div class="content"></div>'));
                                                                     $('div.content')
-                                                                        .html('(this has absolutely nothing to do with that dutch word for being totally drunk, we\'re not like that)')
+                                                                        .html('ha ha')
                                                                         .textillate({
                                                                             in: {
-                                                                                duration: 1000,
-                                                                                effect: 'fadeIn',
+                                                                                duration: 2000,
+                                                                                effect: 'fadeInLeftBig',
                                                                                 done: function() {
                                                                                     $('div.content').fadeOut('slow', function() {
                                                                                         deferred.resolve();

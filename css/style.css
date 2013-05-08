@@ -8,15 +8,31 @@ body {
 }
 
 h1.header {
+    text-align: center;
+    position: fixed;
+    padding-top: 40px;
+    width: 960px;
+    z-index: 50;
+    visibility: hidden;
 }
 
 h1.header.middle {
+    text-align: center;
+    position: fixed;
+    width: 960px;
     padding-top: 40px;
+    z-index: 50;
+    visibility: hidden;
 }
 
 div.content {
+    position: fixed;
     text-align: center;
-    top: 80px;
+    top: 200px;
+    heigth: 100%;
+    width: 960px;
+    z-index: 50;
+    visibility: hidden;
 }
 
 div.body {
@@ -34,15 +50,16 @@ div.body {
 
 div.earth {
     position: fixed;
-    top: 100px;
-    padding-top: 66px;
+    top: 10px;
+    padding-top: 0px;
     width:980px;
-    height:400px;
+    height:700px;
     margin-left: auto;
     margin-right: auto;
     margin-top: 20px;
     margin-bottom: 20px;
     z-index: 10;
+    opacity: .5;
 }
 
 div.img {
@@ -63,7 +80,7 @@ div.img {
     display: none;
     position: fixed;
     top: 400px;
-    z-index: 1;
+    z-index: 20;
 }
 
 div.iframe {
@@ -86,4 +103,48 @@ div.iframe iframe {
     height: 100%;
     margin: 0;
     padding: 0;
+}
+
+div.outro {
+    opacity: 0;
+}
+
+div.outro-text {
+    color: #fff;
+    position: fixed;
+    top: 330px;
+    width: 800px;
+    height:100%;
+    z-index: 20;
+}
+
+div.outro-text span {
+    visibility: hidden;
+}
+
+div.outro-text p {
+    clear:both;
+    padding-bottom: 22px;
+    margin-bottom: 40px;
+}
+
+div.outro-text p span.title {
+    width: 400px;
+    display:inline-block;
+}
+
+div.outro-text p span.value {
+    width: 400px;
+    text-align: right;
+    display:inline-block;
+    float: right;
+}
+
+div.time {
+    background-color: #fff;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 200px;
+    height: 80px;
 }

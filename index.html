@@ -36,12 +36,13 @@
         'js/jquery.earth.js',
         'js/jquery.klem.js',
         'js/jquery.visuals.js',
+        'js/jquery.outro.js',
         'js/demo.js'
     ]);
 </script>
 <canvas id="fft" width="1000" height="1000"></canvas>
 <div class="body" id="body_container">
-    <audio controls="none" style="display: none">
+    <audio controls="none" style="display: none" id="audio">
         <source src="track/track-2.ogg" type="audio/ogg" />
         <source src="track/track.mp3" type="audio/mpeg" />
         Your browser does not support the audio element.
@@ -55,8 +56,76 @@
     </div>
 </div>
 <div class="iframe">
-    <iframe id="webgl-content-1"></iframe>
-    <iframe id="webgl-content-2"></iframe>
+
+</div>
+<div class="outro">
+    <div id="atari">
+        <div class="monitor">
+            <div class="canvas atari">
+                <div class="screen">
+                    <div class="icon">
+                        <div class="side1 side">
+                            <div class="atari1"></div>
+                            <div class="atari2"></div>
+                            <div class="atari3"></div>
+                            <div class="atari4"></div>
+                        </div>
+                        <div class="side2 side">
+                            <div class="atari1"></div>
+                            <div class="atari2"></div>
+                            <div class="atari3"></div>
+                            <div class="atari4"></div>
+                        </div>
+                    </div>
+                    <div class="pong">
+                        <div class="score1 score"></div>
+                        <div class="score2 score"></div>
+                        <div class="player1 player"></div>
+                        <div class="player2 player"></div>
+                        <div class="ball"></div>
+                    </div>
+                    <div class="resolution canvas">
+                        <div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div> <div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div>
+                    </div>
+                    <div class="shadow"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="outro-text">
+        <p class="code">
+            <span class="title">Code:</span>
+            <span class="value">
+                <span class="content">jansi (richard)</span>
+            </span>
+        </p>
+        <p class="music">
+            <span class="title">Music:</span>
+            <span class="value">
+                <span class="content">EatMe</span><br/>
+                <span class="content">http://eatme.pro/</span>
+            </span>
+        </p>
+        <p class="support">
+            <span class="title">Moral support:</span>
+            <span class="value">
+                <span class="content">maikel</span><br/>
+                <span class="content">paniq</span><br/>
+                <span class="content">my cats <3</span>
+            </span>
+        </p>
+        <p class="hello">
+            <span class="title">Saying hello to:</span>
+            <span class="value">
+                <span class="content">Brainstorm</span><br/>
+                <span class="content">Farbrausch</span><br/>
+                <span class="content">deFEEST</span><br/>
+            </span>
+        </p>
+    </div>
+</div>
+<div class="time">
+
 </div>
 </body>
 </html>

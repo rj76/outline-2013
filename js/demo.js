@@ -6,6 +6,7 @@
 
     $.demo = function () {
     };
+
     $.demo.prototype.init = function () {
         var self = this;
         this.$media = new $.media(this);
@@ -14,6 +15,7 @@
         this.$earth = new $.earth(this);
         this.$klem = new $.klem(this);
         this.$visuals = new $.visuals(this);
+        this.$outro = new $.outro(this);
     };
 
     $.demo.prototype.run = function () {
@@ -24,14 +26,24 @@
 
     $.demo.prototype.second_run = function () {
         var self = this;
-        $.when(self.$intro.start()).then(function() {
-            $.when(self.$earth.start()).then(function() {
-                $.when(self.$klem.start()).then(function() {
-                    $.when(self.$visuals.showVisual1()).then(function () {
-                    });
-                });
-            });
-        });
+//        $.when(self.$intro.start()).then(function() {
+//            $.when(self.$earth.start()).then(function() {
+//                $.when(self.$klem.start()).then(function() {
+//                    $.when(self.$visuals.showVisual1()).then(function () {
+//                        $.when(self.$visuals.stopVisual1()).then(function () {
+                            Modernizr.load({
+                                load: [
+                                    'css/atari.css'
+                                ],
+                                complete: function() {
+                                    self.$outro.start();
+                                }
+                            });
+//                        });
+//                    });
+//                });
+//            });
+//        });
     };
 
     $demo = new $.demo();
