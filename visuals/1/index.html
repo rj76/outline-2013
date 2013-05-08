@@ -381,7 +381,7 @@
 			
 			var dendriteParams = function() {
 				this.arms = 15;
-				this.twistiness = .2;
+				this.twistiness = .4;
 				this.randomness = .60;
 				this.minLength = 40;
 				this.maxLength = 100;
@@ -626,7 +626,6 @@
                         rotateCamDendrite = true;
                         scene.remove(floor);
                         camera.position.z =camera.position.x = -1000;
-                        rotateFactor = 1000;
                         state = 'dendrite';
                         $.when(showDendrite()).then(function() {
                             if (parent.window) parent.window.$('#body_container').trigger('visual-done');
@@ -663,7 +662,7 @@
             function showDendrite() {
                 var d = $.Deferred(), c=1;
                 $('#container').on('kick', function() {
-                    if(c++>=28) {
+                    if(c++>=28 && (dancer.getTime() >219 && dancer.getTime() < 220)) {
                         kick1.off();
                         kick2.off();
                         d.resolve();
@@ -748,7 +747,7 @@
                     for( var j = 0; j < meshDendrite.children.length; j++ ) {
                         var u = meshDendrite.children[ j ].material.uniforms;
                         var s = .5 * ( .5 + .5 * Math.sin( .01 * ( .1 * j + .1 * time ) ) );
-                        c.setHSV( hue, u.baseColour.value.y - dancer.getFrequency( 0 ), u.baseColour.value.z + s + dancer.getFrequency( 0 ) );
+                        c.setHSV( hue, u.baseColour.value.y - .1*dancer.getFrequency( 0 ), u.baseColour.value.z + s + .1*dancer.getFrequency( 0 ) );
                         meshDendrite.children[ j ].material.uniforms.colour.value.set( c.r, c.g, c.b );
                         u.scale.z = 100*dancer.getFrequency(0);
                     }
@@ -770,7 +769,7 @@
                                 uc.impulse.value = impulse;
                             }
                         }
-                        var f =  1*dancer.getFrequency( j );
+                        var f =  10*dancer.getFrequency( j );
                         if (meshDendrite.children[ a[ 0 ] ]) {
                             var c = meshDendrite.children[ a[ 0 ] ].material.uniforms;
                             c.impulse.value = f;
@@ -799,7 +798,7 @@
 
             var delta;
             var cameraAngle = 0, cnt=0;
-            var rotateCamDendrite = false, rotateCamHellnight = false, rotateFactor=1;
+            var rotateCamDendrite = false, rotateCamHellnight = false;
             function render() {
                 cnt++;
                 TWEEN.update();
@@ -817,10 +816,10 @@
                 // Move the camera in a non-circular orbit
                 if (rotateCamHellnight) {
                     // Move the camera in a non-circular orbit
-                    camera.position.z = Math.cos(cameraAngle) * 800+100;
-                    camera.position.x = Math.sin(cameraAngle) * 500+100;
+                    camera.position.z = Math.cos(cameraAngle) * 800;
+                    camera.position.x = Math.sin(cameraAngle) * 500;
                     camera.position.y = FLOOR+100;
-                    cameraAngle -= 1*dancer.getFrequency(0);
+                    cameraAngle -= .1*dancer.getFrequency(0);
                     camera.lookAt(floor.position);
                 }
                 else if (rotateCamDendrite) {
@@ -829,7 +828,7 @@
                     camera.position.y = Math.sin(cameraAngle * 1.35) * 1000;
 
                     // Update camera angle for orbit
-                    cameraAngle += 0.1 * dancer.getFrequency(10);
+                    cameraAngle += .1 * dancer.getFrequency(0);
                     camera.lookAt(meshDendrite.position);
                 }
 
@@ -859,7 +858,7 @@
                     onKick: function() {
                         kickCount2++;
                         if (animations.length == 0) return;
-                        if (kickCount2%4==0) {
+                        if (kickCount2%16==0) {
                             animations[2].stop();
                             animations[3].stop();
                             animations[2].currentTime = animations[3].currentTime = 0;
