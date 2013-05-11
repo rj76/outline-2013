@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'Atari Font Full Version';
+    src: URL('fonts/AtariST8x16SystemFont.ttf');
+    /*format ('ttf');*/
+
+}
+
 html, body {
     height: 100%;
 }
@@ -37,7 +44,7 @@ div.content {
 
 div.body {
     width: 1000px;
-    height: 700px;
+    height: 600px;
     margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
@@ -46,20 +53,6 @@ div.body {
     padding: 10px;
     display: none;
     z-index: 0;
-}
-
-div.earth {
-    position: fixed;
-    top: 10px;
-    padding-top: 0px;
-    width:980px;
-    height:700px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    z-index: 10;
-    opacity: .5;
 }
 
 div.img {
@@ -74,13 +67,6 @@ div.img {
     margin-top: 20px;
     margin-bottom: 20px;
     z-index: 10;
-}
-
-#fft {
-    display: none;
-    position: fixed;
-    top: 400px;
-    z-index: 20;
 }
 
 div.iframe {
@@ -146,6 +132,14 @@ div.time {
     position: absolute;
     left: 10px;
     top: 10px;
+    font-size: 10PX;
     width: 200px;
     height: 80px;
+}
+
+#sprite_canvas {
+    display: none;
+    left:50%;
+    margin-left: auto;
+    margin-right: auto;
 }

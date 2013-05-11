@@ -4,60 +4,37 @@
     <title>Kl3m - Outline 2013</title>
     <meta charset="utf-8">
     <script src="js/modernizr.custom.50055.js"></script>
-    <script src="http://www.webglearth.com/api.js"></script>
 </head>
 <body>
 <script>
     Modernizr.load([
         'css/style.css',
         'css/animate-custom.css',
-        {
-            load:'http://www.google.com/jsapi',
-            callback: function() {
-                google.load("maps", "3",
-                        {
-                            callback: function () {
-                            },
-                            other_params: "sensor=false"
-                        });
-            }
-        },
         'js/jquery-1.9.1.min.js',
         'js/jquery.gradienttext-0.1.min.js',
         'js/tween.min.js',
         'js/jquery.textillate.js',
         'js/jquery.lettering-0.6.1.min.js',
-        'js/typeface-0.15.js',
-        'js/atari_font_full_version_regular.typeface.js',
 
         'js/jquery.pre-intro.js',
         'js/jquery.intro.js',
         'js/jquery.media.js',
-        'js/jquery.earth.js',
-        'js/jquery.klem.js',
+        'js/jquery.sprite.js',
         'js/jquery.visuals.js',
         'js/jquery.outro.js',
         'js/demo.js'
     ]);
 </script>
-<canvas id="fft" width="1000" height="1000"></canvas>
 <div class="body" id="body_container">
     <audio controls="none" style="display: none" id="audio">
         <source src="track/track-2.ogg" type="audio/ogg" />
         <source src="track/track.mp3" type="audio/mpeg" />
         Your browser does not support the audio element.
     </audio>
-    <h1 class="header typeface-js"></h1>
-    <div class="content typeface-js"></div>
-    <div class="earth" id="earth_div"></div>
-    <div class="img"></div>
-    <div class="wm">
-        <img alt="" />
-    </div>
+    <h1 class="header"></h1>
+    <div class="content "></div>
 </div>
-<div class="iframe">
-
-</div>
+<div class="iframe"></div>
 <div class="outro">
     <div id="atari">
         <div class="monitor">
@@ -127,5 +104,6 @@
 <div class="time">
 
 </div>
+<canvas id="sprite_canvas" width="400" height="200"></canvas>
 </body>
 </html>

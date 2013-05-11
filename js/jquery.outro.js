@@ -1,5 +1,5 @@
 (function ($) {
-    var initialDelay = 1000;
+    var initialDelay = 100;
     $.outro = function (demo) {
         this.demo = demo;
     };

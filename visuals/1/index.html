@@ -453,7 +453,7 @@
                 meshCanvas.position.y = FLOOR;
                 meshCanvas.rotation.x = -1*Math.PI/2;
                 meshCanvas.receiveShadow = true;
-                scene.add(meshCanvas);
+//                scene.add(meshCanvas);
                 floor = meshCanvas;
                 d.resolve();
                 return d;
@@ -592,12 +592,20 @@
                 addLightBottom();
                 addlLightBottom2();
                 dParams.render();
-
+                if (parent.window) {
+                    parent.window.$('#body_container').on('stop-hellnight', function() {
+                        stopHellnight();
+                    });
+                    parent.window.$('#body_container').on('show-dendrite', function() {
+                        showDendrite();
+                    });
+                    parent.window.$('#body_container').on('stop-dendrite', function() {
+                        stopDendrite();
+                    });
+                }
                 $.when(checkDancer()).then(function() {
                     $.when(createFloors()).then(function() {
-                        $.when(
-                                loadHellnights()
-                        ).then(function() {
+                        $.when(loadHellnights()).then(function() {
                             scene.fog = new THREE.Fog( 0xffffff, 2000, 5000 );
                             scene.fog.color.setHSV( 0.6, 0.37, 0.051275 );
                             container.appendChild( renderer.domElement );
@@ -605,68 +613,112 @@
                                 dancer.play();
                             }
                             animate();
-                            doAnimations();
+                            showHellnight();
                         });
                     });
                 });
-            }
-
-            function doAnimations() {
-                var d = $.Deferred();
-                $.when(cam2(hellnight_x)).then(function() {
-                    rotateCamHellnight = true;
-//                    camera.rotation.y = ;
-                    state = 'hellnight';
-                    $.when(showHellnight()).then(function() {
-                        for(var i=0;i<models.length;i++) {
-                            scene.remove(models[i]);
-                        }
-                        rotateCamHellnight = false;
-                        scene.add( meshDendrite );
-                        rotateCamDendrite = true;
-                        scene.remove(floor);
-                        camera.position.z =camera.position.x = -1000;
-                        state = 'dendrite';
-                        $.when(showDendrite()).then(function() {
-                            if (parent.window) parent.window.$('#body_container').trigger('visual-done');
-                        });
-                    });
-                });
-                return d;
             }
 
             function cam2(x) {
                 var d = $.Deferred();
                 var position = {x:camera.position.x};
                 var tween = new TWEEN.Tween(position)
-                        .to({x:x-1000}, 8000)
-                        .delay(1000)
-                        .onUpdate(function() {camera.position.x=position.x;})
-                        .onComplete(function() {
-                            d.resolve();
-                        });
+                    .to({x:x-1000}, 8000)
+                    .delay(1000)
+                    .onUpdate(function() {camera.position.x=position.x;})
+                    .onComplete(function() {
+                        d.resolve();
+                });
                 tween.start();
                 return d;
             }
 
-            function showHellnight() {
-                var d = $.Deferred(), c=1;
-                if (parent.window) parent.window.$('#body_container').on('stop-hellnight', function() {
-                    d.resolve();
+            var particleSystem;
+            function createParticles() {
+                // create the particle variables
+                var particleCount = 3600,
+                        particles = new THREE.Geometry();
+
+                // create the particle variables
+                var pMaterial = new THREE.ParticleBasicMaterial({
+                    color: 0xFFFFFF,
+                    size: 20,
+                    map: THREE.ImageUtils.loadTexture(
+                            "img/ball.png"
+                    ),
+                    vertexColors: true,
+                    //blending: THREE.AdditiveBlending,
+                    transparent: true
                 });
-                return d;
+
+                var colors = [];
+                // now create the individual particles
+                for(var p = 0; p < particleCount; p++) {
+
+                    // create a particle with random
+                    // position values, -250 -> 250
+                    var pX = Math.random() * 300 - 150,
+                            pY = Math.random() * 300 - 150,
+                            pZ = Math.random() * 300 - 150,
+                            particle = new THREE.Vertex(
+                                    new THREE.Vector3(pX, pY, pZ)
+                            );
+                    // create a velocity vector
+                    particle.velocity = new THREE.Vector3(
+                            0,              // x
+                            -Math.random(), // y: start with random vel
+                            0);             // z
+                    // add it to the geometry
+                    particles.vertices.push(particle);
+                    colors[ p ] = new THREE.Color( 0xffffff );
+                    colors[ p ].setRGB(
+                            Math.random() / 2.0 + 0.7,
+                            Math.random() / 2.0 + 0.7,
+                            Math.random() / 2.0 + 0.7 );
+                }
+                particles.colors = colors;
+
+                // create the particle system
+                particleSystem = new THREE.ParticleSystem(
+                        particles,
+                        pMaterial);
+                particleSystem.sortParticles = true;
+            }
+
+            function startParticles() {
+                state = 'hell-particles';
+                scene.add(particleSystem);
+            }
+
+            function showHellnight() {
+                for(var i=0;i<models.length;i++) {
+                    scene.add(models[i]);
+                }
+                scene.add(floor);
+                camera.position.set(-8000, FLOOR+40, 7);
+                $.when(cam2(hellnight_x)).then(function() {
+                    rotateCamHellnight = true;
+                    state = 'hellnight';
+                });
+            }
+
+            function stopHellnight() {
+                for(var i=0;i<models.length;i++) {
+                    scene.remove(models[i]);
+                }
+                scene.remove(floor);
+                rotateCamHellnight = false;
             }
 
             function showDendrite() {
-                var d = $.Deferred(), c=1;
-                $('#container').on('kick', function() {
-                    if(c++>=28 && (dancer.getTime() >219 && dancer.getTime() < 220)) {
-                        kick1.off();
-                        kick2.off();
-                        d.resolve();
-                    }
-                });
-                return d;
+                camera.position.z =camera.position.x = -1000;
+                scene.add( meshDendrite );
+                rotateCamDendrite = true;
+                state = 'dendrite';
+            }
+
+            function stopDendrite() {
+                scene.remove(meshDendrite);
             }
 
             function ensureLoop( animation ) {
@@ -797,6 +849,7 @@
             var delta;
             var cameraAngle = 0, cnt=0;
             var rotateCamDendrite = false, rotateCamHellnight = false;
+            var last = new Date().getTime();
             function render() {
                 cnt++;
                 TWEEN.update();
@@ -809,6 +862,38 @@
                 renderLightFog();
                 if (state == 'dendrite') {
                     renderDendrite();
+                }
+
+                if (state == 'hell-particles') {
+                    last = t;
+
+                    // add some rotation to the system
+                    particleSystem.rotation.y = (t/1000) * Math.PI/16;
+
+                    var pCount = particleCount;
+                    while(pCount--) {
+                        // get the particle
+                        var particle = particles.vertices[pCount];
+
+                        // check if we need to reset
+                        if(particle.position.y < -150) {
+                            particle.position.y = 150;
+                            particle.velocity.y = 0;
+                        }
+
+                        // update the velocity with
+                        // a splat of randomniz
+                        particle.velocity.y -= Math.random() * .08;
+
+                        // and the position
+                        particle.position.addSelf(
+                                particle.velocity);
+                    }
+
+                    // flag to the particle system that we've
+                    // changed its vertices. This is the
+                    // dirty little secret.
+                    particleSystem.geometry.__dirtyVertices = true;
                 }
 
                 // Move the camera in a non-circular orbit
@@ -867,10 +952,6 @@
                 });
                 kick2.on();
             }
-
-        function loadWorld2() {
-
-        }
 		</script>
 </body>
 </html>
