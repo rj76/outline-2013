@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "Atari Font Full Version";
+    src: url(../js/atari.ttf);
+}
+
 html, body {
     height: 100%;
 }
@@ -76,13 +81,6 @@ div.img {
     z-index: 10;
 }
 
-#fft {
-    display: none;
-    position: fixed;
-    top: 400px;
-    z-index: 20;
-}
-
 div.iframe {
     position: fixed;
     z-index: -1;
@@ -92,12 +90,12 @@ div.iframe {
     height: 700px;
     margin: 0;
     padding: 0;
+    opacity: 0;
     margin-left: auto;
     margin-right: auto;
 }
 
 div.iframe iframe {
-    display: none;
     border: 0;
     width: 100%;
     height: 100%;
@@ -110,6 +108,7 @@ div.outro {
 }
 
 div.outro-text {
+    opacity: 0;
     color: #fff;
     position: fixed;
     top: 330px;
@@ -123,17 +122,20 @@ div.outro-text span {
 }
 
 div.outro-text p {
+    visibility: hidden;
     clear:both;
     padding-bottom: 22px;
     margin-bottom: 40px;
 }
 
 div.outro-text p span.title {
+    visibility: hidden;
     width: 400px;
     display:inline-block;
 }
 
 div.outro-text p span.value {
+    visibility: hidden;
     width: 400px;
     text-align: right;
     display:inline-block;

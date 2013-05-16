@@ -2,7 +2,7 @@
     var zoom_out = 2, zoom_in = 4, zoom=zoom_out, zoom_in_em=7,zoom_in_kl=10;
     var current	= {lat: 0, lon: 0, zoom: zoom_out};
     var earth, tween_interval;
-    var delay = 100, duration = 2500;
+    var delay = 100, duration = 2200;
 
     var update  = function(){
         earth.setPosition(current.lat, current.lon);

@@ -20,8 +20,9 @@
 
     $.demo.prototype.run = function () {
         var self = this;
-        $.when(self.$media.start()).then(function () {
-        });
+
+        // this will fire events to get things started
+        $.when(self.$media.start()).then(function () {});
     };
 
     $.demo.prototype.second_run = function () {
@@ -29,15 +30,19 @@
         $.when(self.$intro.start()).then(function() {
             $.when(self.$earth.start()).then(function() {
                 $.when(self.$klem.start()).then(function() {
-                    $.when(self.$visuals.showVisual1()).then(function () {
-                        $.when(self.$visuals.stopVisual1()).then(function () {
-                            Modernizr.load({
-                                load: [
-                                    'css/atari.css'
-                                ],
-                                complete: function() {
-                                    self.$outro.start();
-                                }
+                    console.log('loading visual');
+                    $.when(self.$visuals.loadVisual()).then(function () {
+                        console.log('showing visual');
+                        $.when(self.$visuals.showVisual()).then(function () {
+                            $.when(self.$visuals.stopVisual()).then(function () {
+                                Modernizr.load({
+                                    load: [
+                                        'css/atari.css'
+                                    ],
+                                    complete: function() {
+                                        self.$outro.start();
+                                    }
+                                });
                             });
                         });
                     });

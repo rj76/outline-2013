@@ -9,10 +9,8 @@
     <link href="js/css.css" rel="stylesheet" type="text/css">
     <script src="../../js/modernizr.custom.50055.js"></script>
     <script src="../../js/jquery-1.9.1.min.js"></script>
-    <script src="js/Detector.js"></script>
     <script src="js/three.js"></script>
     <script src="js/tween.js"></script>
-
 
 		<style>
 			* {
@@ -50,13 +48,7 @@
     </head>
 
 	<body>
-        <audio controls="none" style="display: none">
-            <source src="../../track/track-2.ogg" type="audio/ogg" />
-            <source src="../../track/track.mp3" type="audio/mpeg" />
-            Your browser does not support the audio element.
-        </audio>
-		<div id="container">
-        </div>
+		<div id="container"></div>
 		<div id="error">
 			<div id="no-webgl">
 				<p>Your browser doesn't seem to support WebGL.</p>
@@ -214,182 +206,170 @@
         </script>
 
 		<script>
-			var container = document.getElementById( 'container' ), stats;
-
 			var camera, scene, renderer;
-            var clock = new THREE.Clock();
+            var clock;
 			var group;
-			var time = 0;
 			var mesh, particlesMesh, material, indexArray = [], pulsateTime = 0, meshDendrite;
-			var isUserInteracting, position = { x:0, y: 0 }, ellapsedFactor;
-            var kickCount1=0, kickCount2=0;
-            var loader = new THREE.JSONLoader();
+			var isUserInteracting, ellapsedFactor;
+            var loader;
 
             var FLOOR = -250;
 
 			var dancer;
 
+            var pos = new THREE.Vector3(0, 1000, 0 );
+            var vCount = 0, armIdx=0;
+
+            function createArm(minLength, maxLength, twistiness, randomness) {
+//                console.log('creating arm, idx: '+armIdx);
+                var length = minLength + Math.random() * ( maxLength - minLength );
+                var scale = .5;
+
+                pos.set( 0, 0, 0 );
+                var dir = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
+                dir.normalize();
+
+                indexArray[armIdx] = [];
+                for( var b = 0; b < length; b ++ ) {
+
+                    var ndir = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
+                    ndir.normalize();
+                    var diff = new THREE.Vector3( dir.x, dir.y, dir.z );
+                    diff.sub( ndir, dir );
+                    diff.multiplyScalar( twistiness );
+                    dir.add( dir, diff );
+                    dir.normalize();
+
+                    scale += .1 * ( .5 - Math.random() );
+                    if( scale < .2 ) scale = .2;
+                    if( scale > .3 ) scale = .3;
+
+                    scale -= .001 * b;
+                    scale *= 1.1;
+
+                    if( scale < 0 ) scale = 0;
+
+                    var offset = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
+                    offset.normalize();
+
+                    var udir = new THREE.Vector3( dir.x, dir.y, dir.z );
+                    offset.normalize();
+                    offset.multiplyScalar( randomness );
+                    udir.add( udir, offset );
+                    udir.normalize();
+                    udir.multiplyScalar( scale * 50 );
+                    pos.add( pos, udir );
+
+                    var c = new THREE.Color();
+                    var hs = { s: .9 + .7 * scale, v: .5 + 2 * scale - .5 * ( 1 - 2 * ( b / length ) ) };
+                    hs.s -= .1 * b / length;
+                    hs.v += .8 * b / length;
+                    c.setHSV( .93, hs.s, hs.v );
+
+                    var normalTexture, blurTexture;
+                    switch( dParams.finish ) {
+                        case 'solid':
+                            normalTexture = THREE.ImageUtils.loadTexture( "sprite-shadow.png" );
+                            blurTexture = THREE.ImageUtils.loadTexture( "sprite.png" );
+                            break;
+                        case 'metallic':
+                            normalTexture = THREE.ImageUtils.loadTexture( "noise.png" );
+                            blurTexture = THREE.ImageUtils.loadTexture( "noise2.png" );
+                            break;
+                        case 'abstract':
+                            normalTexture = THREE.ImageUtils.loadTexture( "sprite-round-sharp.png" );
+                            blurTexture = THREE.ImageUtils.loadTexture( "sprite-round.png" );
+                            break;
+                        case 'cloudy':
+                            normalTexture = THREE.ImageUtils.loadTexture( "cloud.png" );
+                            blurTexture = THREE.ImageUtils.loadTexture( "cloud-blur.png" );
+                            break;
+                        case 'fuzzy':
+                            normalTexture = THREE.ImageUtils.loadTexture( "splatter.png" );
+                            blurTexture = THREE.ImageUtils.loadTexture( "splatter-blur.png" );
+                            break;
+                    }
+
+                    var material = new THREE.ShaderMaterial( {
+
+                        uniforms: {
+
+                            normal: { type: "t", value: 1, texture: normalTexture },
+                            blur: { type: "t", value: 2, texture: blurTexture },
+                            scale: { type: 'f', value: scale },
+                            originalScale: { type: 'f', value: scale },
+                            impulse: { type: 'f', value: 0 },
+                            colour: { type: 'v3', value: new THREE.Vector3( c.r, c.g, c.b ) },
+                            baseColour: { type: 'v3', value: new THREE.Vector3( .93, hs.s, hs.v ) },
+                            z: { type: 'f', value: pos.z },
+                            rotation: { type: 'f', value: ( dParams.finish == 'metallic' )?0:Math.random() * 2 * Math.PI },
+                            arm: { type: 'f', value: armIdx },
+                            opacity: { type: 'f', value: 1 },
+                            resolution: { type: 'v2', value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
+
+                        },
+                        vertexShader: document.getElementById( 'vs-particles' ).textContent,
+                        fragmentShader: document.getElementById( 'fs-particles' ).textContent,
+                        transparent: true
+
+                    } );
+
+                    var plane = new THREE.Mesh( new THREE.PlaneGeometry( 300, 300 ), material );
+                    plane.position.set( pos.x, pos.y, pos.z );
+                    meshDendrite.add( plane );
+                    indexArray[armIdx].push( vCount );
+                    vCount++;
+                }
+                armIdx++;
+//                setOcclusion();
+            }
+
 			function createDendrite( settings ) {
-				
 				if( meshDendrite ) scene.remove( meshDendrite );
-
                 meshDendrite = new THREE.Object3D();
-				indexArray = [];
-				var vCount = 0;
-				
-				var 
-					arms = settings.arms,
-					twistiness = settings.twistiness,
-					randomness = settings.randomness,
-					minLength = settings.minLength,
-					maxLength = settings.maxLength,
-					length;
 
-				var pos = new THREE.Vector3(dendrite_start_x, 1000, 0 );
-				var scale = .5;
+                scene.add(meshDendrite);
 
-				var normalTexture, blurTexture;
-				switch( dParams.finish ) {
-					case 'solid':
-						normalTexture = THREE.ImageUtils.loadTexture( "sprite-shadow.png" );
-						blurTexture = THREE.ImageUtils.loadTexture( "sprite.png" );
-						break;
-					case 'metallic':
-						normalTexture = THREE.ImageUtils.loadTexture( "noise.png" );
-						blurTexture = THREE.ImageUtils.loadTexture( "noise2.png" );
-						break;
-					case 'abstract':
-						normalTexture = THREE.ImageUtils.loadTexture( "sprite-round-sharp.png" );
-						blurTexture = THREE.ImageUtils.loadTexture( "sprite-round.png" );
-						break;
-					case 'cloudy':
-						normalTexture = THREE.ImageUtils.loadTexture( "cloud.png" );
-						blurTexture = THREE.ImageUtils.loadTexture( "cloud-blur.png" );
-						break;
-					case 'fuzzy':
-						normalTexture = THREE.ImageUtils.loadTexture( "splatter.png" );
-						blurTexture = THREE.ImageUtils.loadTexture( "splatter-blur.png" );
-						break;
-				}
-			
-				for( var a = 0; a < arms; a ++ ) {
+                return true;
+			}
 
-					indexArray[ a ] = [];
-					length = minLength + Math.random() * ( maxLength - minLength );
-					scale = .5;
+            function setOcclusion() {
+                var occlusion = [];
+                for( var bla = 0; bla < meshDendrite.children.length; bla++ ) {
+                    occlusion[ bla ] = { v: 0, c: 0 };
+                    for( var i = 0; i < meshDendrite.children.length; i++ ) {
+                        if( i != bla ) {
+                            var p = new THREE.Vector3();
+                            p.copy( meshDendrite.children[ bla ].position );
+                            p.sub( p, meshDendrite.children[ i ].position );
+                            var d = p.lengthSq();
+                            if( d < 100000 ) {
+                                occlusion[ bla ].c++;
+                                occlusion[ bla ].v += 1 - d / 100000;
+                            }
+                        }
+                    }
+                }
 
-					pos.set( 0, 0, 0 );
-					var dir = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
-					dir.normalize();
-
-					for( var b = 0; b < length; b ++ ) {
-
-						var ndir = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
-						ndir.normalize();
-						var diff = new THREE.Vector3( dir.x, dir.y, dir.z );
-						diff.sub( ndir, dir );
-						diff.multiplyScalar( twistiness );
-						dir.add( dir, diff ); 
-						dir.normalize();
-						
-						scale += .1 * ( .5 - Math.random() );
-						if( scale < .2 ) scale = .2;
-						if( scale > .3 ) scale = .3;
-						
-						scale -= .001 * b;
-						scale *= 1.1;
-						
-						if( scale < 0 ) scale = 0;
-						
-						var offset = new THREE.Vector3( .5 - Math.random(), .5 - Math.random(), .5 - Math.random() );
-						offset.normalize();
-						
-						var udir = new THREE.Vector3( dir.x, dir.y, dir.z );
-						offset.normalize();
-						offset.multiplyScalar( randomness );
-						udir.add( udir, offset );
-						udir.normalize();
-						udir.multiplyScalar( scale * 50 );
-						pos.add( pos, udir );
-						
-						var c = new THREE.Color();
-						var hs = { s: .9 + .7 * scale, v: .5 + 2 * scale - .5 * ( 1 - 2 * ( b / length ) ) };
-						hs.s -= .1 * b / length;
-						hs.v += .8 * b / length;
-						c.setHSV( .93, hs.s, hs.v );
-						
-						var material = new THREE.ShaderMaterial( {
-
-							uniforms: {
-
-								normal: { type: "t", value: 1, texture: normalTexture },
-								blur: { type: "t", value: 2, texture: blurTexture },
-								scale: { type: 'f', value: scale },
-								originalScale: { type: 'f', value: scale },
-								impulse: { type: 'f', value: 0 },
-								colour: { type: 'v3', value: new THREE.Vector3( c.r, c.g, c.b ) },
-								baseColour: { type: 'v3', value: new THREE.Vector3( .93, hs.s, hs.v ) },
-								z: { type: 'f', value: pos.z },
-								rotation: { type: 'f', value: ( dParams.finish == 'metallic' )?0:Math.random() * 2 * Math.PI },
-								arm: { type: 'f', value: a },
-								opacity: { type: 'f', value: 1 },
-								resolution: { type: 'v2', value: new THREE.Vector2( window.innerWidth, window.innerHeight ) }
-								
-							},
-							vertexShader: document.getElementById( 'vs-particles' ).textContent,
-							fragmentShader: document.getElementById( 'fs-particles' ).textContent,
-							transparent: true
-
-						} );
-						
-						var plane = new THREE.Mesh( new THREE.PlaneGeometry( 300, 300 ), material );
-						plane.position.set( pos.x, pos.y, pos.z );
-                        meshDendrite.add( plane );
-						
-						indexArray[ a ].push( vCount );
-						vCount++;
-
-					}
-
-				}
-
-				var occlusion = [];
-				for( var j = 0; j < meshDendrite.children.length; j++ ) {
-					occlusion[ j ] = { v: 0, c: 0 };
-					for( var i = 0; i < meshDendrite.children.length; i++ ) {
-						if( i != j ) {
-							var p = new THREE.Vector3();
-							p.copy( meshDendrite.children[ j ].position );
-							p.sub( p, meshDendrite.children[ i ].position );
-							var d = p.lengthSq();
-							if( d < 100000 ) {
-								occlusion[ j ].c++;
-								occlusion[ j ].v += 1 - d / 100000;
-							}
-						}
-					}
-				}
-				
-				for( var j = 0; j < meshDendrite.children.length; j++ ) {
-					if( occlusion[ j ].c > 0 ) {
+                for( var j = 0; j < meshDendrite.children.length; j++ ) {
+                    if( occlusion[ j ].c > 0 ) {
                         meshDendrite.children[ j ].material.uniforms.baseColour.value.y -= .1 * occlusion[ j ].v / occlusion[ j ].c
                         meshDendrite.children[ j ].material.uniforms.baseColour.value.z -= .75 * occlusion[ j ].v / occlusion[ j ].c;
-					}
-				}
-			}
-			
+                    }
+                }
+            }
 			
 			var dendriteParams = function() {
-				this.arms = 15;
-				this.twistiness = .4;
-				this.randomness = .60;
+				this.arms = 5;
+				this.twistiness = .3;
+				this.randomness = 0.6;
 				this.minLength = 40;
-				this.maxLength = 100;
+				this.maxLength = 200;
 				this.animate = true;
 				this.pulsate = true;
 				this.particles = false;
-//				this.finish = 'fuzzy';
-				this.finish = 'metallic';
+				this.finish = 'fuzzy';
+//				this.finish = 'metallic';
 				this.randomize = function() {
 					dParams.arms = 1 + Math.round( Math.random() * 20 );
 					dParams.minLength = 1 + Math.round( Math.random() * 199 );
@@ -399,26 +379,34 @@
 					dParams.render();
 				};
 				this.render = function() {
-					createDendrite( {
-						arms: this.arms,
-						twistiness: this.twistiness,
-						randomness: this.randomness,
-						minLength: this.minLength,
-						maxLength: this.maxLength
-					} );
+                    var d = $.Deferred();
+                    try {
+                        if (createDendrite( {
+                            arms: this.arms,
+                            twistiness: this.twistiness,
+                            randomness: this.randomness,
+                            minLength: this.minLength,
+                            maxLength: this.maxLength
+                        })) {
+                            d.resolve();
+                        }
+                    } catch(err) {
+                        console.log(err);
+                        d.reject();
+                    }
+                    return d;
 				};
+
+                this.createArm = function() {
+                    createArm(this.minLength, this.maxLength, this.twistiness, this.randomness);
+                };
 			};
 			
 			var dParams = new dendriteParams();
 			
-			if( Detector.webgl ) {
-				window.addEventListener( 'load', init, false );
-			}
-
             var plane_w = 400, plane_h = 400;
 
             var hellnight_x = 0;
-            var dendrite_start_x = 0;
 
             function createFloors() {
                 var d = $.Deferred();
@@ -441,20 +429,18 @@
                 for (var i=0;i<plane.faceVertexUvs[0].length;i ++ ) {
                     var uvs = plane.faceVertexUvs[ 0 ][ i ];
 
-                    for (j=0;j<uvs.length;j ++) {
+                    for (var j=0;j<uvs.length;j ++) {
                         uvs[ j ].u *= 8;
                         uvs[ j ].v *= 8;
                     }
                 }
 
-                var meshCanvas = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: grass, wireframe: false }));
-                meshCanvas.position.x = x;
-                meshCanvas.position.z = 0;
-                meshCanvas.position.y = FLOOR;
-                meshCanvas.rotation.x = -1*Math.PI/2;
-                meshCanvas.receiveShadow = true;
-                scene.add(meshCanvas);
-                floor = meshCanvas;
+                floor = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: grass, wireframe: false }));
+                floor.position.x = x;
+                floor.position.z = 0;
+                floor.position.y = FLOOR;
+                floor.rotation.x = -1*Math.PI/2;
+                floor.receiveShadow = true;
                 d.resolve();
                 return d;
             }
@@ -465,6 +451,7 @@
                 try {
                     if (dancer = parent.window.$('#body_container').data('dancer')) {
                         externalDancer = true;
+                        setKicks();
                         d.resolve();
                     } else {
                         $.when(loadDancer()).then(function() {d.resolve()});
@@ -475,29 +462,25 @@
                 return d;
             }
 
+            var dancerkick = 1;
             function loadDancer() {
                 var d = $.Deferred();
-                var audio  = document.getElementsByTagName('audio')[0];
                 Modernizr.load({
                     load: [
                         '../../js/dancer/dancer.min.js',
                         '../../js/dancer/kick.js',
                         '../../js/dancer/adapterWebkit.js',
                         '../../js/dancer/adapterMoz.js',
-                        '../../js/dancer/fft.js',
-                        '../../js/dancer/dancer.fft.js'
                     ],
                     complete: function() {
                         try {
                             dancer = new Dancer();
-                            dancer.load(audio);
-
-                            if (dancer.isLoaded()) {
+                            dancer.bind('loaded', function() {
+                                setKicks();
                                 d.resolve();
-                            } else {
-                                d.reject();
-                                console.log('reject');
-                            }
+                            });
+
+                            dancer.load({ src: '../../track/track-2.ogg'});
                         } catch(err) {
                             console.log(err);
                             d.reject();
@@ -505,6 +488,29 @@
                     }
                 });
                 return d;
+            }
+
+            var kick;
+            function setKicks() {
+                kick = dancer.createKick({
+                    onKick: function () {
+                        dancerkick++;
+                        if (dancerkick%8==0) {
+                            if (!animations[0].isPlaying) animations[0].play(false);
+                            if (!animations[1].isPlaying) animations[1].play(false);
+                        }
+
+                        if (dancerkick%16==0) {
+                            animations[2].stop();
+                            animations[3].stop();
+                            animations[2].currentTime = animations[3].currentTime = 0;
+                            animations[2].play(false);
+                            animations[3].play(false);
+                        }
+
+//                        if(dancerkick%16==0) console.log('kick from dancer: '+dancerkick+', length: '+armIdx);
+                    }
+                }).on();
             }
 
             function loadHellnights() {
@@ -515,20 +521,18 @@
 
                     createScene( geometry, hellnight_x+400-50, FLOOR, 100);
                     createScene( geometry, hellnight_x+400-50, FLOOR, -100);
-
-                    setKicks();
                     d.resolve();
                 });
                 return d;
             }
 
+            var spotLight,lightTop, lightBottom1, lightBottom2;
             function addSpotLight() {
                 spotLight = new THREE.SpotLight( 0xffffff, 1.025 );
                 spotLight.angle = 1;
-                spotLight.distance = 10000;
+                spotLight.distance = 1000;
                 spotLight.exponent = 30;
                 spotLight.position.set( 0, 300, 1200 );
-                scene.add( spotLight );
 
                 spotLight.castShadow = true;
 
@@ -540,98 +544,153 @@
                 spotLight.shadowBias = -0.001;
 
                 spotLight.target.position.set( 0, 200, 0 );
-                scene.add(spotLight);
             }
 
             function addLightTop() {
                 lightTop = new THREE.DirectionalLight( 0xffffff, 1.5 );
                 lightTop.color.setHSV( 0.6, 0.31, 1 );
                 lightTop.position.set( -1000, 1, 1 );
-                scene.add( lightTop );
             }
 
             function addLightBottom() {
                 lightBottom1 = new THREE.DirectionalLight( 0xffffff, 1.25 );
                 lightBottom1.color.setHSV( 0.075, 0.85, 1 );
                 lightBottom1.position.set( 0, -1, 0 );
-                scene.add( lightBottom1 );
             }
 
             function addlLightBottom2() {
                 lightBottom2 = new THREE.DirectionalLight( 0xffffff, 1.25 );
                 lightBottom2.color.setHSV( 0.075, 0.85, 1 );
                 lightBottom2.position.set( 0, -1, 1 );
-                scene.add( lightBottom2 );
             }
+
+            window.addEventListener( 'load', init, false );
 
             var state;
 			function init() {
-                if( Detector.webgl ){
-                    renderer = new THREE.WebGLRenderer({
-                        antialias		: true,	// to get smoother output
-                        preserveDrawingBuffer	: true	// to allow screenshot
-                    });
-                    renderer.setClearColorHex( 0x000000, 1 );
-                    renderer.setSize( window.innerWidth, window.innerHeight );
-                    // uncomment if webgl is required
-                }else{
-                    Detector.addGetWebGLMessage();
-                    return true;
-                }
+                console.log('init');
+                clock = new THREE.Clock();
+                loader = new THREE.JSONLoader();
+
+                renderer = new THREE.WebGLRenderer({
+                    antialias		: true,	// to get smoother output
+                    preserveDrawingBuffer	: true	// to allow screenshot
+                });
+                renderer.setClearColorHex( 0x000000, 1 );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                console.log('w='+window.innerWidth+', h='+window.innerHeight);
+                var container = document.getElementById('container');
+                container.appendChild(renderer.domElement);
 
                 scene = new THREE.Scene();
 
                 // put a camera in the scene
                 camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000 );
-                camera.position.set(-8000, FLOOR+40, 7);
-                camera.lookAt(scene.position)
-                scene.add(camera);
-
+                console.log('creating lights');
                 addSpotLight();
                 addLightTop();
                 addLightBottom();
                 addlLightBottom2();
-                dParams.render();
-
-                $.when(checkDancer()).then(function() {
-                    $.when(createFloors()).then(function() {
-                        $.when(
-                                loadHellnights()
-                        ).then(function() {
-                            scene.fog = new THREE.Fog( 0xffffff, 2000, 5000 );
-                            scene.fog.color.setHSV( 0.6, 0.37, 0.051275 );
-                            container.appendChild( renderer.domElement );
-                            if (!externalDancer) {
-                                dancer.play();
-                            }
-                            animate();
-                            doAnimations();
+                console.log('creating done, creating dentrite');
+                $.when(dParams.render()).then(function() {
+                    $.when(checkDancer()).then(function() {
+                        console.log('dancer done');
+                        $.when(createFloors()).then(function() {
+                            console.log('floors done');
+                            $.when(loadHellnights()).then(function() {
+                                console.log('load hellnights done');
+                                if (parent.window && parent.window.$('#body_container').html()) {
+                                    parent.window.$('#body_container').one('startAll', function() {
+                                        console.log('startAll triggered from parent');
+                                        startAll();
+                                    });
+                                    console.log('triggering webgl-loaded');
+                                    parent.window.$('#body_container').trigger('webgl-loaded');
+                                } else {
+                                    console.log('starting all from main window');
+                                    startAll();
+                                }
+                            });
                         });
                     });
                 });
             }
 
-            function doAnimations() {
+            function startAll() {
+                camera.position.set(-8000, FLOOR+40, 7);
+                camera.lookAt(scene.position)
+                scene.add(camera);
+
+                scene.add(lightTop);
+                scene.add(lightBottom1);
+                scene.add(lightBottom2);
+                scene.add(spotLight);
+                scene.fog = new THREE.Fog( 0xffffff, 2000, 5000 );
+                scene.fog.color.setHSV( 0.6, 0.37, 0.051275 );
+
+                if (!externalDancer) {
+                    dancer.play();
+                }
+
+                animate();
+
+                console.log('starting hellnight');
+                $.when(startHellnight()).then(function() {
+                    console.log('hellnight done');
+                    rotateCamHellnight = false;
+                    rotateCamDendrite = true;
+                    scene.remove(floor);
+                    camera.position.z =camera.position.x = camera.position.y = -1000;
+                    spotLight.target.position.set(meshDendrite.position.x-300, meshDendrite.position.y-300, meshDendrite.position.z-300);
+                    for(var i=0;i<models.length;i++) {
+                        scene.remove(models[i]);
+                    }
+                    scene.add(meshDendrite);
+                    state = 'dendrite';
+                    console.log('starting dendrite');
+                    $.when(showDendrite()).then(function() {
+                        console.log('dendrite done, triggering visual-done from iframe');
+                        if (parent.window) parent.window.$('#body_container').trigger('visual-done');
+                    });
+                })
+
+            }
+
+            function startHellnight() {
                 var d = $.Deferred();
+                scene.add(floor);
+                for (var i=0;i<models.length;i++) {
+                    scene.add(models[i]);
+                }
+
                 $.when(cam2(hellnight_x)).then(function() {
                     rotateCamHellnight = true;
-//                    camera.rotation.y = ;
                     state = 'hellnight';
                     $.when(showHellnight()).then(function() {
-                        for(var i=0;i<models.length;i++) {
-                            scene.remove(models[i]);
-                        }
-                        rotateCamHellnight = false;
-                        scene.add( meshDendrite );
-                        rotateCamDendrite = true;
-                        scene.remove(floor);
-                        camera.position.z =camera.position.x = -1000;
-                        state = 'dendrite';
-                        $.when(showDendrite()).then(function() {
-                            if (parent.window) parent.window.$('#body_container').trigger('visual-done');
-                        });
+                        d.resolve();
                     });
                 });
+                return d;
+            }
+
+            function showDendrite() {
+                var d = $.Deferred();
+                if (dancerkick >= 800) {
+                    d.resolve();
+                }
+                return d;
+            }
+
+            function showHellnight() {
+                var d = $.Deferred(), c=1;
+                if (!parent.window.$('#body_container').html()  && dancerkick >= 16)  {
+                    d.resolve();
+                }
+                if (parent.window.$('#body_container').html()) {
+                    parent.window.$('#body_container').on('stop-hellnight', function() {
+                        d.resolve();
+                    });
+                }
                 return d;
             }
 
@@ -649,26 +708,6 @@
                 return d;
             }
 
-            function showHellnight() {
-                var d = $.Deferred(), c=1;
-                if (parent.window) parent.window.$('#body_container').on('stop-hellnight', function() {
-                    d.resolve();
-                });
-                return d;
-            }
-
-            function showDendrite() {
-                var d = $.Deferred(), c=1;
-                $('#container').on('kick', function() {
-                    if(c++>=28 && (dancer.getTime() >219 && dancer.getTime() < 220)) {
-                        kick1.off();
-                        kick2.off();
-                        d.resolve();
-                    }
-                });
-                return d;
-            }
-
             function ensureLoop( animation ) {
                 for ( var i = 0; i < animation.hierarchy.length; i ++ ) {
                     var bone = animation.hierarchy[ i ];
@@ -679,6 +718,7 @@
                     last.scl = first.scl;
                 }
             }
+
             var animations = [], models=[];
             function createScene( geometry, x, y, z) {
                 geometry.computeBoundingBox();
@@ -716,7 +756,6 @@
                 var s = .5;
                 mesh.position.set( x - 200, y - bb.min.y, z );
                 mesh.scale.set( s, s, s );
-                scene.add( mesh );
 
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
@@ -733,26 +772,27 @@
                 if( dParams.pulsate ) {
                     pulsateTime += delta;
                     for( var j = 0; j < meshDendrite.children.length; j++ ) {
-                        meshDendrite.children[ j ].material.uniforms.scale.value = meshDendrite.children[ j ].material.uniforms.originalScale.value + .25 * meshDendrite.children[ j ].material.uniforms.originalScale.value * Math.sin( .1 * j + .05 * pulsateTime );
+                        meshDendrite.children[ j ].material.uniforms.scale.value = 1*(meshDendrite.children[ j ].material.uniforms.originalScale.value + .25 * meshDendrite.children[ j ].material.uniforms.originalScale.value * Math.sin( .1 * j + .05 * pulsateTime ));
                     }
                 }
 
                 if( dParams.animate && dancer ) {
                     var c = new THREE.Color();
-                    var hue = .5 + .5 * Math.sin( .0001 * time );
+                    var hue = .5 + .5 * Math.sin( 10 * delta );
                     hue += dancer.getFrequency(0);
                     if( hue > .99 ) hue = .99;
                     for( var j = 0; j < meshDendrite.children.length; j++ ) {
                         var u = meshDendrite.children[ j ].material.uniforms;
-                        var s = .5 * ( .5 + .5 * Math.sin( .01 * ( .1 * j + .1 * time ) ) );
-                        c.setHSV( hue, u.baseColour.value.y - .1*dancer.getFrequency( 0 ), u.baseColour.value.z + s + .1*dancer.getFrequency( 0 ) );
+                        var s = .5 * ( .5 + .5 * Math.sin( .01 * ( .01 * j + .1 * delta ) ) );
+                        c.setHSV( hue, u.baseColour.value.y - dancer.getFrequency( 0 ), u.baseColour.value.z + s + dancer.getFrequency( 0 ) );
                         meshDendrite.children[ j ].material.uniforms.colour.value.set( c.r, c.g, c.b );
-                        u.scale.z = 100*dancer.getFrequency(0);
+                        u.scale.z = 10*dancer.getFrequency(0);
+                        meshDendrite.children[ j ].scale.z -= 10*dancer.getFrequency(0);
                     }
 
-                    meshDendrite.rotation.x += 100*delta * dancer.getFrequency( 0 );
-                    meshDendrite.rotation.y += 100*delta * dancer.getFrequency( 10 );
-                    meshDendrite.rotation.z += 100*delta * dancer.getFrequency( 20 );
+                    meshDendrite.rotation.x += .01*delta * dancer.getFrequency( 0 );
+                    meshDendrite.rotation.y += .01*delta * dancer.getFrequency( 2 );
+                    meshDendrite.rotation.z += .01*delta * dancer.getFrequency( 4 );
 
                     for( var j = 0; j < indexArray.length; j++ ) {
                         var a = indexArray[ j ];
@@ -761,7 +801,7 @@
                                 var up = meshDendrite.children[ a[ i - 1 ] ].material.uniforms;
                                 var uc = meshDendrite.children[ a[ i ] ].material.uniforms;
                                 var impulse = up.impulse.value;
-                                impulse = uc.impulse.value + ( impulse - uc.impulse.value ) * .99;
+                                impulse = uc.impulse.value + ( impulse - uc.impulse.value ) * 1.99;
                                 impulse -= 5;
                                 if( impulse < uc.originalScale.value ) impulse = uc.originalScale.value;
                                 uc.impulse.value = impulse;
@@ -776,6 +816,7 @@
                 }
             }
 
+            var fogIntensity;
             function renderLightFog() {
                 lightBottom1.intensity = THREE.Math.clamp( lightBottom1.intensity + ( 0.5 - Math.random() ) * 0.1, 0.75, 1.5 );
                 lightBottom2.intensity = THREE.Math.clamp( lightBottom2.intensity + ( 0.5 - Math.random() ) * 0.05, 0.75, 1.5 );
@@ -795,8 +836,10 @@
             }
 
             var delta;
-            var cameraAngle = 0, cnt=0;
-            var rotateCamDendrite = false, rotateCamHellnight = false;
+            var cameraAngle = 0, cnt=0, next_z, next_x, cam_tween, in_tween=false;
+            var rotateCamDendrite = false, rotateCamHellnight = false, hellnightStarted=false;
+            var cam_position, cam_target;
+
             function render() {
                 cnt++;
                 TWEEN.update();
@@ -813,64 +856,71 @@
 
                 // Move the camera in a non-circular orbit
                 if (rotateCamHellnight) {
-                    // Move the camera in a non-circular orbit
-                    camera.position.z = Math.cos(cameraAngle) * 800;
-                    camera.position.x = Math.sin(cameraAngle) * 500;
-                    camera.position.y = FLOOR+100;
-                    cameraAngle -= .1*dancer.getFrequency(0);
+                    if (!hellnightStarted) {
+                        cam_position = {
+                            x:camera.position.x,
+                            z: camera.position.z
+                        };
+                        cam_target = {
+                            x: Math.floor((Math.sin(cameraAngle) * 400)*1.2),
+                            z: Math.floor((Math.cos(cameraAngle) * 800)*1.2)
+                        };
+                        hellnightStarted = true;
+                        startCamTween();
+                    }
+
+                    cameraAngle += .1*dancer.getFrequency(2);
                     camera.lookAt(floor.position);
                 }
                 else if (rotateCamDendrite) {
-                    camera.position.z = Math.cos(cameraAngle) * 1000;
-                    camera.position.x = Math.sin(cameraAngle) * 2000;
+//                    TWEEN.removeAll();
+                    camera.position.z = Math.cos(cameraAngle) * 3000;
+                    camera.position.x = Math.sin(cameraAngle) * 5000;
                     camera.position.y = Math.sin(cameraAngle * 1.35) * 1000;
-
                     // Update camera angle for orbit
-                    cameraAngle += .1 * dancer.getFrequency(0);
+                    cameraAngle += 10 * dancer.getFrequency(0);
                     camera.lookAt(meshDendrite.position);
+                    if (armIdx < dParams.arms && dancerkick%2==0) {
+                        dParams.createArm();
+                    }
+
+                    if (dancerkick%32==0 && armIdx == dParams.arms) {
+                        var idx = Math.floor(Math.random()*indexArray.length);
+                        var a = indexArray[idx];
+                        for( var i = a.length - 1; i > 0; i-- ) {
+                            meshDendrite.remove(meshDendrite.children[a[i-1]]);
+                        }
+                        indexArray.splice(idx, 1);
+                        armIdx--;
+                    }
                 }
 
 				renderer.render( scene, camera );
 			}
 
-            var kick1, kick2;
-            function setKicks() {
-                kick1 = dancer.createKick({
-                    frequency: [0, 0],
-                    threshold: .1,
-                    onKick: function() {
-                        kickCount1++;
-                        if (animations.length == 0) return;
-                        if (kickCount1%4==0) {
-                            $('#container').trigger('kick');
-                            if (!animations[0].isPlaying) animations[0].play(false);
-                            if (!animations[1].isPlaying) animations[1].play(false);
-                        }
-                    }
-                });
-                kick1.on();
 
-                kick2 = dancer.createKick({
-                    frequency: [10,20],
-                    threshold: .01,
-                    onKick: function() {
-                        kickCount2++;
-                        if (animations.length == 0) return;
-                        if (kickCount2%16==0) {
-                            animations[2].stop();
-                            animations[3].stop();
-                            animations[2].currentTime = animations[3].currentTime = 0;
-                            animations[2].play(false);
-                            animations[3].play(false);
-                        }
-                    }
-                });
-                kick2.on();
-            }
+        function startCamTween() {
+            if (in_tween) return;
+            cam_tween = new TWEEN.Tween(cam_position)
+                    .to(cam_target, 2000)
+                    .onUpdate(function() {
+                        camera.position.x=cam_position.x;
+                        camera.position.z=cam_position.z;
+                        in_tween=true;
+                        camera.position.y = FLOOR+100;
+                    })
+                    .onComplete(function() {
+                        cam_target.x = Math.floor((Math.sin(cameraAngle) * 400));
+                        cam_target.z = Math.floor((Math.cos(cameraAngle) * 800));
+                        cam_target.x <= 0 ? cam_target.x -= 100 : cam_target.x += 100;
+                        cam_target.y <= 0 ? cam_target.z -= 100 : cam_target.z += 100;
+                        in_tween = false;
+                        startCamTween();
+            });
 
-        function loadWorld2() {
-
+            cam_tween.start();
         }
+
 		</script>
 </body>
 </html>
