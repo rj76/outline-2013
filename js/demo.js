@@ -12,10 +12,16 @@
         this.$media = new $.media(this);
         this.$preintro = new $.preintro(this);
         this.$intro = new $.intro(this);
-        this.$earth = new $.earth(this);
-        this.$klem = new $.klem(this);
+//        this.$earth = new $.earth(this);
+//        this.$klem = new $.klem(this);
+        this.$sprite = new $.sprite();
         this.$visuals = new $.visuals(this);
         this.$outro = new $.outro(this);
+
+        $('div.body').on('start-sprite', function() {
+            self.$sprite.start();
+        });
+
     };
 
     $.demo.prototype.run = function () {

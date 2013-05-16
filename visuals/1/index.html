@@ -470,7 +470,7 @@
                         '../../js/dancer/dancer.min.js',
                         '../../js/dancer/kick.js',
                         '../../js/dancer/adapterWebkit.js',
-                        '../../js/dancer/adapterMoz.js',
+                        '../../js/dancer/adapterMoz.js'
                     ],
                     complete: function() {
                         try {
@@ -591,6 +591,7 @@
                 addLightTop();
                 addLightBottom();
                 addlLightBottom2();
+
                 console.log('creating done, creating dentrite');
                 $.when(dParams.render()).then(function() {
                     $.when(checkDancer()).then(function() {
@@ -670,7 +671,6 @@
                         d.resolve();
                     });
                 });
-                return d;
             }
 
             function showDendrite() {
@@ -698,12 +698,12 @@
                 var d = $.Deferred();
                 var position = {x:camera.position.x};
                 var tween = new TWEEN.Tween(position)
-                        .to({x:x-1000}, 8000)
-                        .delay(1000)
-                        .onUpdate(function() {camera.position.x=position.x;})
-                        .onComplete(function() {
-                            d.resolve();
-                        });
+                    .to({x:x-1000}, 8000)
+                    .delay(1000)
+                    .onUpdate(function() {camera.position.x=position.x;})
+                    .onComplete(function() {
+                        d.resolve();
+                });
                 tween.start();
                 return d;
             }
@@ -854,6 +854,38 @@
                     renderDendrite();
                 }
 
+                if (state == 'hell-particles') {
+                    last = t;
+
+                    // add some rotation to the system
+                    particleSystem.rotation.y = (t/1000) * Math.PI/16;
+
+                    var pCount = particleCount;
+                    while(pCount--) {
+                        // get the particle
+                        var particle = particles.vertices[pCount];
+
+                        // check if we need to reset
+                        if(particle.position.y < -150) {
+                            particle.position.y = 150;
+                            particle.velocity.y = 0;
+                        }
+
+                        // update the velocity with
+                        // a splat of randomniz
+                        particle.velocity.y -= Math.random() * .08;
+
+                        // and the position
+                        particle.position.addSelf(
+                                particle.velocity);
+                    }
+
+                    // flag to the particle system that we've
+                    // changed its vertices. This is the
+                    // dirty little secret.
+                    particleSystem.geometry.__dirtyVertices = true;
+                }
+
                 // Move the camera in a non-circular orbit
                 if (rotateCamHellnight) {
                     if (!hellnightStarted) {
@@ -898,7 +930,6 @@
 				renderer.render( scene, camera );
 			}
 
-
         function startCamTween() {
             if (in_tween) return;
             cam_tween = new TWEEN.Tween(cam_position)
@@ -920,7 +951,6 @@
 
             cam_tween.start();
         }
-
 		</script>
 </body>
 </html>

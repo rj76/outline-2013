@@ -1,6 +1,6 @@
 @font-face {
-    font-family: "Atari Font Full Version";
-    src: url(../js/atari.ttf);
+    font-family: "Atari";
+    src: url(../fonts/fonts/AtariST8x16SystemFont.ttf);
 }
 
 html, body {
@@ -8,7 +8,7 @@ html, body {
 }
 
 body {
-    font-family: Atari Font Full Version;
+    font-family: Atari;
     background-color: #000;
 }
 
@@ -42,7 +42,7 @@ div.content {
 
 div.body {
     width: 1000px;
-    height: 700px;
+    height: 600px;
     margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
@@ -51,20 +51,6 @@ div.body {
     padding: 10px;
     display: none;
     z-index: 0;
-}
-
-div.earth {
-    position: fixed;
-    top: 10px;
-    padding-top: 0px;
-    width:980px;
-    height:700px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    z-index: 10;
-    opacity: .5;
 }
 
 div.img {
@@ -148,6 +134,14 @@ div.time {
     position: absolute;
     left: 10px;
     top: 10px;
+    font-size: 10PX;
     width: 200px;
     height: 80px;
+}
+
+#sprite_canvas {
+    display: none;
+    left:50%;
+    margin-left: auto;
+    margin-right: auto;
 }

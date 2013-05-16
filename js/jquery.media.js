@@ -8,7 +8,7 @@
         var self = this;
 
         var
-            dancer, kick, kicks=bars=0,
+            dancer, kick,
             audio  = document.getElementsByTagName('audio')[0];
 
         Modernizr.load({
@@ -35,9 +35,6 @@
 
                     dancer
                         .load(audio)
-                        .onceAt(22, function() {
-                            self.demo.$preintro.tweenViewport()
-                        })
                         .onceAt(44, function() {
                             self.demo.second_run();
                         })
