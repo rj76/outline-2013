@@ -145,7 +145,7 @@ div.outro-text p span.value {
 }
 
 div.time {
-    /*display: none;*/
+    display: none;
     background-color: #fff;
     position: absolute;
     left: 10px;
