@@ -7,13 +7,13 @@
     $.outro.prototype.start = function() {
         var self = this;
 
-        $('div.outro').show();
+        $('div.outro,div.outro-text').show();
         $('div.outro-text').css('left', ($(window).width()/2)-($('div.outro-text').width()/2)+'px');
         $('div.outro').fadeIn('slow', function() {
             $('h1.header,div.content,div.img,div.earth,div.body,#fft').hide();
             $('div.outro').css('opacity','100');
             $('div.canvas.atari').css('left', ($(window).width()/2)-(540/2)+'px');
-            $('div.canvas.atari').fadeTo(2000, 1, function() {
+            $('div.canvas.atari,div.outro-text').fadeTo(2000, 1, function() {
                 showCode();
             });
         });

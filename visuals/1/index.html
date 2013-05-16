@@ -328,8 +328,6 @@
 				if( meshDendrite ) scene.remove( meshDendrite );
                 meshDendrite = new THREE.Object3D();
 
-                scene.add(meshDendrite);
-
                 return true;
 			}
 
@@ -671,6 +669,7 @@
                         d.resolve();
                     });
                 });
+                return d;
             }
 
             function showDendrite() {
@@ -682,12 +681,14 @@
             }
 
             function showHellnight() {
-                var d = $.Deferred(), c=1;
+                var d = $.Deferred();
                 if (!parent.window.$('#body_container').html()  && dancerkick >= 16)  {
+                    console.log('resolved from within');
                     d.resolve();
                 }
                 if (parent.window.$('#body_container').html()) {
                     parent.window.$('#body_container').on('stop-hellnight', function() {
+                        console.log('stop-hellnight triggered');
                         d.resolve();
                     });
                 }

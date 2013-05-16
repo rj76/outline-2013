@@ -8,7 +8,7 @@
         var self = this;
 
         var
-            dancer, kick,
+            dancer,
             audio  = document.getElementsByTagName('audio')[0];
 
         Modernizr.load({
@@ -21,24 +21,16 @@
             complete: function() {
                 try {
                     dancer = new Dancer();
-                    kick = dancer.createKick({
-                        onKick: function () {
-                            if (kicks++%4 == 0) {
-                                if (bars++%4==0) {
-                                    $('div.body').trigger('bar');
-                                } else {
-                                    $('div.body').trigger('kick');
-                                }
-                            }
-                        }
-                    }).on();
-
                     dancer
                         .load(audio)
+                        .onceAt(22, function() {
+                            self.demo.$preintro.tweenViewport()
+                        })
                         .onceAt(44, function() {
                             self.demo.second_run();
                         })
                         .onceAt(175, function() {
+                            console.log('triggering stop-hellnight');
                             $('#body_container').trigger('stop-hellnight');
                         })
                         .onceAt(218, function() {

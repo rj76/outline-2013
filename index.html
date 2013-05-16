@@ -4,20 +4,33 @@
     <title>Kl3m - Outline 2013</title>
     <meta charset="utf-8">
     <script src="js/modernizr.custom.50055.js"></script>
+    <script src="http://www.webglearth.com/api.js"></script>
 </head>
 <body>
 <script>
     Modernizr.load([
         'css/style.css',
         'css/animate-custom.css',
+        {
+            load:'http://www.google.com/jsapi',
+            callback: function() {
+                google.load("maps", "3",
+                        {
+                            callback: function () {
+                            },
+                            other_params: "sensor=false"
+                        });
+            }
+        },
         'js/jquery-1.9.1.min.js',
         'js/jquery.gradienttext-0.1.min.js',
         'js/tween.min.js',
         'js/jquery.textillate.js',
         'js/jquery.lettering-0.6.1.min.js',
-
         'js/jquery.pre-intro.js',
         'js/jquery.intro.js',
+        'js/jquery.earth.js',
+        'js/jquery.klem.js',
         'js/jquery.media.js',
         'js/jquery.sprite.js',
         'js/jquery.visuals.js',
@@ -78,7 +91,7 @@
         <p class="code">
             <span class="title">Code:</span>
             <span class="value">
-                <span class="content">jansi (richard)</span>
+                <span class="content">richard (needs a handle)</span>
             </span>
         </p>
         <p class="music">
@@ -106,9 +119,7 @@
         </p>
     </div>
 </div>
-<div class="time">
-
-</div>
+<div class="time"></div>
 <canvas id="sprite_canvas" width="400" height="200"></canvas>
 </body>
 </html>
